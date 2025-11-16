@@ -1,0 +1,554 @@
+# Aleph - Project Documentation
+
+## Quick Reference
+- [Complete Documentation Index](./docs/INDEX.md)
+- [Command Reference](./docs/COMMANDS.md)
+- [Architecture Overview](./docs/ARCHITECTURE.md)
+- [API Reference](./docs/API.md)
+- [Development Guide](./docs/DEVELOPMENT.md)
+
+## Project Overview
+
+**Aleph** is an open-source, web-based platform for indexing, searching, and analyzing large collections of documents and structured data. Built by OCCRP (Organized Crime and Corruption Reporting Project), it's specifically designed for investigative journalism and compliance research.
+
+**Version:** 4.1.7
+**License:** MIT
+**Repository:** `/home/user/aleph`
+**Primary Use Case:** Document sifting and cross-referencing for investigative reporting
+
+### Core Capabilities
+
+1. **Document Management** - Index and search massive document collections (PDF, Word, HTML, etc.)
+2. **Entity Analysis** - Structure and cross-reference entities (people, companies, organizations)
+3. **Full-Text Search** - Powerful Elasticsearch-backed search with fuzzy matching
+4. **Cross-Reference (Xref)** - Automatic entity matching across datasets using ML
+5. **Investigations** - Create diagrams, timelines, and profiles from entities
+6. **Alerts** - Get notified when new data matches saved searches
+7. **Access Control** - Fine-grained permissions per collection
+
+## Technology Stack
+
+### Backend
+- **Language:** Python 3.10
+- **Framework:** Flask 2.3.3
+- **Database:** PostgreSQL 10+
+- **Search:** Elasticsearch 7.17.0
+- **Queue:** RabbitMQ 3.9 / Redis
+- **Cache:** Redis (alpine)
+- **ORM:** SQLAlchemy 2.0.21
+- **Schema:** FollowTheMoney 3.5.9 (OCCRP entity model)
+
+### Frontend
+- **Framework:** React 17.0.2 + TypeScript
+- **State:** Redux 4.2.1 + Redux-Thunk
+- **UI Library:** Blueprint.js 4.18.0
+- **Build:** Create React App + Craco
+- **Routing:** React Router 6.28.1
+
+### Infrastructure
+- **Container:** Docker + Docker Compose
+- **Orchestration:** Kubernetes (Helm charts)
+- **Web Server:** Gunicorn (backend), Nginx (frontend)
+- **Document Processing:** ingest-file 4.1.2
+
+## Quick Start
+
+### Development Environment
+
+```bash
+# Start infrastructure services
+make services
+
+# Run database migrations
+make upgrade
+
+# Start API + UI
+make web
+
+# Access the application
+open http://localhost:8080
+```
+
+### Production Deployment
+
+```bash
+# Using Docker Compose
+docker-compose up -d
+
+# Using Kubernetes
+helm install aleph ./helm
+```
+
+## Project Structure
+
+```
+aleph/
+├── aleph/              # Backend Python application
+│   ├── model/          # SQLAlchemy ORM models
+│   ├── views/          # Flask API blueprints
+│   ├── logic/          # Business logic layer
+│   ├── search/         # Elasticsearch query builders
+│   ├── index/          # Index management
+│   ├── worker.py       # Async task processing
+│   └── manage.py       # CLI management commands
+├── ui/                 # Frontend React application
+│   └── src/
+│       ├── components/ # Reusable React components
+│       ├── screens/    # Full-page views
+│       ├── dialogs/    # Modal dialogs
+│       ├── actions/    # Redux actions
+│       └── reducers/   # Redux reducers
+├── helm/               # Kubernetes deployment
+├── e2e/                # End-to-end tests
+├── docs/               # Documentation (see INDEX.md)
+└── Makefile            # Development commands
+```
+
+## Architecture Overview
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                 React UI (Browser)                      │
+│              Redux State Management                     │
+└────────────────────┬────────────────────────────────────┘
+                     │ REST API (/api/2/*)
+┌────────────────────▼────────────────────────────────────┐
+│              Flask API Backend                          │
+│  Authentication │ Authorization │ Business Logic        │
+└─────┬──────────┬──────────┬──────────┬─────────────────┘
+      │          │          │          │
+   ┌──▼──┐  ┌───▼───┐  ┌───▼───┐  ┌──▼──────┐
+   │ DB  │  │  ES   │  │Worker │  │ Archive │
+   │ PG  │  │ Index │  │ Queue │  │ S3/File │
+   └─────┘  └───────┘  └───────┘  └─────────┘
+```
+
+### Key Components
+
+1. **API Layer** (`aleph/views/`) - REST endpoints for all operations
+2. **Model Layer** (`aleph/model/`) - Data models and persistence
+3. **Logic Layer** (`aleph/logic/`) - Business logic and orchestration
+4. **Search Layer** (`aleph/search/`, `aleph/index/`) - Elasticsearch operations
+5. **Worker Layer** (`aleph/worker.py`) - Background job processing
+6. **UI Layer** (`ui/`) - React single-page application
+
+## Core Concepts
+
+### Collections
+Organizational units for data. Each collection can contain:
+- Documents (files, folders)
+- Entities (structured data)
+- Mappings (data imports)
+
+Collections have:
+- **Category** - 20 predefined types (news, leak, court, sanctions, etc.)
+- **Permissions** - Read/write access per user/group
+- **Metadata** - Publisher, update frequency, countries, languages
+
+### Entities
+Structured data objects following the FollowTheMoney schema:
+- **Person** - Individuals
+- **Company** - Organizations
+- **LegalEntity** - Generic legal entities
+- **Document** - File references
+- **Event** - Temporal occurrences
+- And 40+ more schemas
+
+### Cross-Reference (Xref)
+Automatic entity matching using:
+- Fingerprint extraction (normalized names)
+- Machine learning scoring (GLM Bernoulli model)
+- Manual review workflow
+- Configurable thresholds
+
+### EntitySets (Investigations)
+Collections of entities for analysis:
+- **Lists** - Simple entity lists
+- **Diagrams** - Network visualization
+- **Timelines** - Chronological view
+- **Profiles** - Detailed entity profiles
+
+### Alerts
+Saved searches that notify users when new matching data appears.
+
+## Common Tasks
+
+### Search Documents
+```bash
+# Via CLI
+aleph search "corruption case"
+
+# Via API
+curl http://localhost:5000/api/2/search?q=corruption
+
+# Via UI
+Navigate to Search page, enter query
+```
+
+### Upload Documents
+```bash
+# Via CLI
+aleph crawldir /path/to/documents --foreign-id my-upload
+
+# Via API
+curl -X POST http://localhost:5000/api/2/collections/{id}/ingest \
+  -F file=@document.pdf
+
+# Via UI
+Collections → Upload button
+```
+
+### Create Entity
+```bash
+# Via CLI
+aleph write-entity collection-id entity.json
+
+# Via API
+curl -X POST http://localhost:5000/api/2/entities \
+  -H "Content-Type: application/json" \
+  -d '{"schema": "Person", "properties": {"name": ["John Doe"]}}'
+
+# Via UI
+Collection → New Entity button
+```
+
+### Run Cross-Reference
+```bash
+# Via CLI
+aleph xref collection-a collection-b
+
+# Via API
+POST /api/2/xref
+{"collection_ids": ["collection-a", "collection-b"]}
+
+# Via UI
+Collection → Cross-reference tab → Select collections
+```
+
+## API Endpoints
+
+Base URL: `/api/2/`
+
+### Authentication
+- `GET /api/2/sessions` - Current session
+- `POST /api/2/sessions/login` - Login
+- `DELETE /api/2/sessions/logout` - Logout
+
+### Search
+- `GET /api/2/search` - Search entities
+- `GET /api/2/entities/{id}` - Get entity
+- `POST /api/2/entities` - Create entity
+- `PUT /api/2/entities/{id}` - Update entity
+- `DELETE /api/2/entities/{id}` - Delete entity
+
+### Collections
+- `GET /api/2/collections` - List collections
+- `GET /api/2/collections/{id}` - Get collection
+- `POST /api/2/collections` - Create collection
+- `PUT /api/2/collections/{id}` - Update collection
+- `DELETE /api/2/collections/{id}` - Delete collection
+
+### Ingestion
+- `POST /api/2/collections/{id}/ingest` - Upload file
+- `GET /api/2/collections/{id}/status` - Ingest status
+
+### Cross-Reference
+- `POST /api/2/xref` - Generate xref matches
+- `GET /api/2/collections/{id}/xref` - Get xref results
+
+See [API Reference](./docs/API.md) for complete endpoint documentation.
+
+## Configuration
+
+Key environment variables (see `aleph.env.tmpl`):
+
+### Required
+- `ALEPH_SECRET_KEY` - Session encryption (generate with `openssl rand -hex 32`)
+- `ALEPH_DATABASE_URI` - PostgreSQL connection string
+- `ALEPH_ELASTICSEARCH_URI` - Elasticsearch cluster URL
+- `REDIS_URL` - Redis cache URL
+- `RABBITMQ_URL` - RabbitMQ queue URL
+
+### Application
+- `ALEPH_APP_TITLE` - UI page title (default: "Aleph")
+- `ALEPH_UI_URL` - Frontend URL (default: `http://localhost:8080/`)
+- `ALEPH_APP_NAME` - Instance name (default: "aleph")
+
+### Authentication
+- `ALEPH_SINGLE_USER` - Disable auth (dev only)
+- `ALEPH_OAUTH` - Enable OAuth login
+- `ALEPH_PASSWORD_LOGIN` - Enable password login (default: true)
+- `ALEPH_ADMINS` - Auto-admin email addresses (comma-separated)
+
+### Storage
+- `ARCHIVE_TYPE` - "file" or "s3"
+- `ARCHIVE_PATH` - Local storage path (default: "/data")
+- `ARCHIVE_BUCKET` - S3 bucket name (if using S3)
+
+### Processing
+- `ALEPH_OCR_DEFAULTS` - Tesseract languages (default: "eng")
+- `WORKER_THREADS` - Worker thread count per process
+
+See [Configuration Guide](./docs/CONFIGURATION.md) for complete details.
+
+## Development
+
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.10+
+- Node.js 16+
+- Make
+
+### Setup
+```bash
+# Clone repository
+git clone https://github.com/alephdata/aleph.git
+cd aleph
+
+# Start services
+make services
+
+# Install dependencies (handled by Docker)
+make build
+
+# Run migrations
+make upgrade
+
+# Start development server
+make web
+```
+
+### Testing
+```bash
+# Backend tests
+make test
+
+# Frontend tests
+make test-ui
+
+# E2E tests
+make e2e
+
+# Linting
+make lint
+make lint-ui
+
+# Format code
+make format
+make format-ui
+```
+
+### Database Migrations
+```bash
+# Create new migration
+aleph db revision -m "description"
+
+# Apply migrations
+aleph db upgrade
+
+# Rollback
+aleph db downgrade
+```
+
+See [Development Guide](./docs/DEVELOPMENT.md) for detailed instructions.
+
+## Security
+
+### Authentication Methods
+1. **Password Login** - Email + password
+2. **OAuth/OIDC** - Google, Azure AD, Cognito, KeyCloak
+3. **API Keys** - For programmatic access
+
+### Authorization
+- **Role-Based Access Control (RBAC)**
+- Per-collection read/write permissions
+- User groups for team access
+- Admin role for system-wide access
+
+### Security Headers
+- HSTS (Force HTTPS)
+- CSP (Content Security Policy)
+- CORS (Configurable origins)
+- Feature Policy (Disable unused browser features)
+
+### Data Protection
+- Password hashing (werkzeug.security)
+- API key digest storage
+- Session token encryption
+- Audit logging (events table)
+
+## Monitoring
+
+### Metrics
+- Prometheus metrics (`prometheus-client`)
+- Custom metrics: request count, latency, worker jobs
+
+### Error Tracking
+- Sentry integration (`SENTRY_DSN`)
+- Structured JSON logging
+- Request profiling (`ALEPH_PROFILE=true`)
+
+### Health Checks
+- `GET /api/2/status` - System status
+- Database connectivity
+- Elasticsearch cluster health
+- Worker queue status
+
+## Troubleshooting
+
+### Common Issues
+
+**Database connection errors**
+```bash
+# Check PostgreSQL is running
+docker-compose ps postgres
+
+# Check connection string
+echo $ALEPH_DATABASE_URI
+
+# Test connection
+psql $ALEPH_DATABASE_URI -c "SELECT 1"
+```
+
+**Elasticsearch not indexing**
+```bash
+# Check ES health
+curl http://localhost:9200/_cluster/health
+
+# Reindex collection
+aleph reindex --foreign-id collection-name
+
+# Check worker logs
+docker-compose logs worker
+```
+
+**Worker not processing jobs**
+```bash
+# Check RabbitMQ
+docker-compose ps rabbitmq
+
+# Check queue status
+aleph status
+
+# Restart worker
+docker-compose restart worker
+```
+
+See [Troubleshooting Guide](./docs/TROUBLESHOOTING.md) for more solutions.
+
+## Performance Tuning
+
+### Elasticsearch
+- Increase heap size: `ES_JAVA_OPTS=-Xms4g -Xmx4g`
+- Adjust shard count in `aleph/index/indexes.py`
+- Enable request cache
+
+### PostgreSQL
+- Increase shared_buffers
+- Tune connection pool size
+- Add database indices for custom queries
+
+### Workers
+- Increase worker count: `docker-compose up --scale worker=4`
+- Adjust thread count: `WORKER_THREADS=8`
+- Enable batch indexing: `INDEXING_TIMEOUT=10`
+
+### Caching
+- Enable response cache: `ALEPH_CACHE=true`
+- Increase Redis memory: `maxmemory 4gb`
+- Configure cache TTL in settings
+
+## Deployment
+
+### Docker Compose (Production)
+```bash
+# Configure environment
+cp aleph.env.tmpl aleph.env
+# Edit aleph.env with production values
+
+# Start stack
+docker-compose up -d
+
+# Initialize database
+docker-compose run --rm api aleph upgrade
+
+# Create admin user
+docker-compose run --rm api aleph createuser --admin admin@example.com
+```
+
+### Kubernetes (Helm)
+```bash
+# Configure values
+cp helm/values.yaml helm/production-values.yaml
+# Edit production-values.yaml
+
+# Install
+helm install aleph ./helm -f helm/production-values.yaml
+
+# Upgrade
+helm upgrade aleph ./helm -f helm/production-values.yaml
+```
+
+See [Deployment Guide](./docs/DEPLOYMENT.md) for production best practices.
+
+## Additional Resources
+
+### Documentation
+- [Complete Documentation Index](./docs/INDEX.md) - All documentation files
+- [Architecture Deep Dive](./docs/ARCHITECTURE.md) - System design details
+- [API Reference](./docs/API.md) - Complete API documentation
+- [Data Models](./docs/MODELS.md) - Database schema reference
+- [Command Reference](./docs/COMMANDS.md) - CLI command guide
+
+### External Links
+- [Official Documentation](https://docs.alephdata.org/)
+- [FollowTheMoney Documentation](https://followthemoney.tech/)
+- [GitHub Repository](https://github.com/alephdata/aleph)
+- [OCCRP](https://www.occrp.org/)
+
+### Community
+- [GitHub Issues](https://github.com/alephdata/aleph/issues)
+- [Discussions](https://github.com/alephdata/aleph/discussions)
+
+## Contributing
+
+### Code Contributions
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature-name`
+3. Make changes and test
+4. Format code: `make format && make format-ui`
+5. Run tests: `make test && make test-ui`
+6. Submit pull request
+
+### Translation
+- Translations managed via [Transifex](https://www.transifex.com/aleph/)
+- 12+ languages supported
+- See [Translation Guide](./docs/TRANSLATION.md)
+
+### Documentation
+- Documentation in Markdown format
+- Located in `docs/` directory
+- Submit PRs for improvements
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+## Credits
+
+Developed by OCCRP (Organized Crime and Corruption Reporting Project)
+
+Built with:
+- Flask (Python web framework)
+- React (UI framework)
+- Elasticsearch (search engine)
+- FollowTheMoney (entity schema)
+- Blueprint.js (UI components)
+- And many other open-source projects
+
+---
+
+**Last Updated:** 2025-11-16
+**Version:** 4.1.7
