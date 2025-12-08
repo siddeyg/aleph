@@ -247,12 +247,13 @@ Read [claude.md](../claude.md) to understand what Aleph is and its core capabili
 |----------|--------|--------------|--------------|
 | claude.md | ✅ Complete | 2025-11-16 | 100% |
 | COMMANDS.md | ✅ Complete | 2025-11-16 | 100% |
-| INDEX.md | ✅ Complete | 2025-11-16 | 100% |
+| INDEX.md | ✅ Complete | 2025-12-08 | 100% |
+| MODELS.md | ✅ Complete | 2025-12-08 | 100% |
 | ARCHITECTURE.md | 📝 In Progress | 2025-11-16 | 80% |
-| API.md | 📝 In Progress | 2025-11-16 | 70% |
+| API.md | 📝 In Progress | 2025-11-16 | 40% (34/86 endpoints) |
+| SECURITY_AUDIT.md | ✅ Complete | 2025-12-08 | 100% |
 | DEVELOPMENT.md | 📝 In Progress | 2025-11-16 | 75% |
 | DEPLOYMENT.md | 📝 In Progress | 2025-11-16 | 70% |
-| MODELS.md | 📝 In Progress | 2025-11-16 | 60% |
 | CONFIGURATION.md | 📝 In Progress | 2025-11-16 | 80% |
 | Other docs | ⏳ Planned | - | 0% |
 
