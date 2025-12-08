@@ -2446,3 +2446,598 @@ curl -X POST \
 - Critical for cross-reference match review
 - Triggers entity reindex in background
 
+---
+
+## Profiles
+
+Profiles are merged entities created by combining multiple entity matches. Used for entity resolution and deduplication.
+
+### GET /api/2/profiles/:id
+
+Retrieve a profile with its constituent items and merged pseudo-entity.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Profile ID
+
+**Response**: 200 OK
+```json
+{
+  "id": "profile-abc123",
+  "type": "profile",
+  "collection_id": 10,
+  "items": [
+    {"entity_id": "entity-1", "judgement": "positive"},
+    {"entity_id": "entity-2", "judgement": "positive"}
+  ],
+  "merged": {
+    "id": "merged-entity-id",
+    "schema": "Person",
+    "properties": {
+      "name": ["John Doe", "J. Doe"]
+    }
+  }
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/profiles/profile-abc123
+```
+
+### GET /api/2/profiles/:id/tags
+
+Get tags (entity types, countries, etc.) for the profile.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Profile ID
+
+**Response**: 200 OK
+```json
+{
+  "status": "ok",
+  "total": 2,
+  "results": [
+    {"field": "countries", "value": "us", "count": 5},
+    {"field": "schema", "value": "Person", "count": 1}
+  ]
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/profiles/profile-abc123/tags
+```
+
+### GET /api/2/profiles/:id/similar
+
+Find similar entities to the profile using fuzzy matching.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Profile ID
+
+**Query Parameters**:
+- `filter:schema` (array) - Filter by entity types
+- `filter:schemata` (array) - Alternative schema filter
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "score": 0.95,
+      "judgement": "no_judgement",
+      "collection_id": 10,
+      "entity": {
+        "id": "similar-entity-123",
+        "schema": "Person",
+        "properties": {"name": ["John Smith"]}
+      }
+    }
+  ],
+  "total": 15
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/profiles/profile-abc123/similar?filter:schema=Person"
+```
+
+### GET /api/2/profiles/:id/expand
+
+Expand the profile to get adjacent entities (entities related to profile entities).
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Profile ID
+
+**Query Parameters**:
+- `filter:property` (string) - Filter by specific properties
+- `limit` (integer) - Entities per property (max: configurable)
+
+**Response**: 200 OK
+```json
+{
+  "status": "ok",
+  "total": 25,
+  "results": [
+    {
+      "property": "ownershipOwner",
+      "count": 5,
+      "entities": [
+        {"id": "company-1", "caption": "ACME Corp"}
+      ]
+    }
+  ]
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/profiles/profile-abc123/expand?limit=10"
+```
+
+### POST /api/2/profiles/_pairwise
+
+Make a pairwise judgement between an entity and a potential match. Creates or alters a profile.
+
+**Auth**: Required (write access)
+
+**Request Body**:
+```json
+{
+  "entity_id": "entity-123",
+  "match_id": "entity-456",
+  "judgement": "positive"
+}
+```
+
+**Judgement Values**: `positive`, `negative`, `unsure`
+
+**Response**: 200 OK
+```json
+{
+  "status": "ok",
+  "profile_id": "profile-abc123"
+}
+```
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"entity_id": "entity-123", "match_id": "entity-456", "judgement": "positive"}' \
+  https://aleph.example.com/api/2/profiles/_pairwise
+```
+
+**Notes**:
+- `positive` judgement merges entities into a profile
+- `negative` judgement marks them as different entities
+- Triggers entity reindexing
+
+---
+
+## Reconciliation (OpenRefine API)
+
+OpenRefine-compatible reconciliation API for matching entities against Aleph data.
+
+### GET/POST /api/freebase/reconcile
+
+Main reconciliation endpoint. Returns service metadata (GET) or performs reconciliation (POST).
+
+**Auth**: Not required (anonymous browsing allowed)
+
+**GET Request**: Returns service metadata
+**POST Request**: Reconciles entities
+
+**Request Body** (POST):
+```json
+{
+  "query": "John Doe",
+  "type": "Person",
+  "properties": [
+    {"pid": "nationality", "v": "US"}
+  ],
+  "limit": 5
+}
+```
+
+**Response**: 200 OK
+```json
+{
+  "result": [
+    {
+      "id": "entity-123",
+      "name": "John Doe",
+      "type": [{"id": "Person", "name": "Person"}],
+      "score": 95.5,
+      "match": false
+    }
+  ],
+  "num": 1
+}
+```
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "John Doe", "type": "Person"}' \
+  https://aleph.example.com/api/freebase/reconcile
+```
+
+### GET/POST /api/2/collections/:id/reconcile
+
+Collection-specific reconciliation. Same as `/api/freebase/reconcile` but scoped to a collection.
+
+**Auth**: Not required (anonymous browsing allowed)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID to search within
+
+**Request/Response**: Same format as `/api/freebase/reconcile`
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "ACME Corp"}' \
+  https://aleph.example.com/api/2/collections/10/reconcile
+```
+
+### GET/POST /api/freebase/suggest
+
+Entity suggestion API (autocomplete) for OpenRefine.
+
+**Auth**: Not required
+
+**Query Parameters**:
+- `prefix` (string) - Text to match
+- `type` (string) - Entity type filter
+- `filter:collection_id` (integer) - Collection filter
+
+**Response**: 200 OK
+```json
+{
+  "code": "/api/status/ok",
+  "status": "200 OK",
+  "prefix": "John",
+  "result": [
+    {
+      "id": "entity-123",
+      "name": "John Doe",
+      "score": 12.5
+    }
+  ]
+}
+```
+
+**Example**:
+```bash
+curl "https://aleph.example.com/api/freebase/suggest?prefix=John&type=Person"
+```
+
+### GET/POST /api/freebase/property
+
+Property suggestion API for OpenRefine.
+
+**Auth**: Not required
+
+**Response**: Returns list of properties for autocomplete
+
+### GET/POST /api/freebase/type
+
+Type (schema) suggestion API for OpenRefine.
+
+**Auth**: Not required
+
+**Response**: Returns list of entity types for autocomplete
+
+---
+
+## Notifications
+
+### GET /api/2/notifications
+
+Get all notifications for the authenticated user (alerts, system messages, etc.).
+
+**Auth**: Required (logged in)
+
+**Query Parameters**:
+- `limit` (integer) - Number of results
+- `offset` (integer) - Results offset
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": "notif-123",
+      "event": "match",
+      "params": {
+        "alert_id": 42,
+        "entity_count": 5
+      },
+      "created_at": "2023-08-15T10:00:00Z"
+    }
+  ],
+  "total": 10
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/notifications
+```
+
+---
+
+## System Status
+
+### GET /api/2/status
+
+Get an overview of collections and exports currently being processed.
+
+**Auth**: Required (logged in)
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "dataset": "collection:10",
+      "collection": {
+        "id": 10,
+        "label": "Panama Papers"
+      },
+      "pending": 150,
+      "running": 5,
+      "finished": 5000
+    }
+  ],
+  "total": 1
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/status
+```
+
+**Notes**:
+- Shows active background job processing
+- Only shows collections user has read access to
+- Useful for monitoring ingestion and indexing progress
+
+---
+
+## Archive
+
+### GET /api/2/archive
+
+Download a binary blob from the archive storage (documents, images, etc.).
+
+**Auth**: Token-based (signed URL)
+
+**Query Parameters**:
+- `token` (string) - Signed JWT token authorizing access to specific blob
+
+**Response**:
+- 200 OK - Returns file content
+- 404 Not Found - Blob doesn't exist
+
+**Example**:
+```bash
+curl "https://aleph.example.com/api/2/archive?token=SIGNED_JWT_TOKEN" \
+  -o document.pdf
+```
+
+**Notes**:
+- Token encodes: content hash, filename, MIME type, expiration
+- Redirects to S3 signed URL if using S3 storage
+- Falls back to direct file serving for local storage
+- Files are automatically cleaned up after download
+
+---
+
+## Streaming Export
+
+### GET /api/2/entities/_stream
+
+Stream all entities matching a query as newline-delimited JSON.
+
+**Auth**: Required (logged in)
+
+**Query Parameters**: (same as `/api/2/search`)
+- `q` (string) - Search query
+- `filter:collection_id` (integer) - Filter by collection
+- `filter:schema` (string) - Filter by entity type
+
+**Response**: 200 OK (streaming)
+```
+{"id": "entity-1", "schema": "Person", "properties": {...}}
+{"id": "entity-2", "schema": "Company", "properties": {...}}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/entities/_stream?filter:schema=Person" \
+  > entities.jsonl
+```
+
+**Notes**:
+- Returns newline-delimited JSON (JSONL format)
+- Streams results incrementally (doesn't load all into memory)
+- Useful for bulk exports
+
+### GET /api/2/collections/:id/_stream
+
+Stream all entities from a specific collection.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+
+**Query Parameters**: Same as `/entities/_stream`
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/collections/10/_stream > collection-export.jsonl
+```
+
+---
+
+## Exports
+
+### GET /api/2/exports
+
+List all export jobs created by the user (Excel, CSV exports from searches).
+
+**Auth**: Required (logged in)
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": "export-123",
+      "status": "successful",
+      "file_name": "search-results.xlsx",
+      "file_size": 524288,
+      "created_at": "2023-08-15T10:00:00Z",
+      "expires_at": "2023-08-22T10:00:00Z"
+    }
+  ],
+  "total": 5
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/exports
+```
+
+---
+
+## Cross-Reference (Xref)
+
+### GET /api/2/collections/:id/xref
+
+Get cross-reference results for a collection (entity matches across datasets).
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+
+**Query Parameters**:
+- `filter:match_collection_id` (integer) - Filter by match collection
+- `filter:schema` (string) - Filter by entity schema
+- `limit`, `offset` - Pagination
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "entity_id": "entity-123",
+      "match_id": "entity-456",
+      "score": 0.95,
+      "match_collection_id": 15,
+      "judgement": "no_judgement"
+    }
+  ],
+  "total": 250
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/collections/10/xref?filter:match_collection_id=15"
+```
+
+### POST /api/2/collections/:id/xref
+
+Generate cross-reference matches between collections.
+
+**Auth**: Required (write access)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID to cross-reference
+
+**Request Body**:
+```json
+{
+  "against_collection_ids": [15, 20, 25]
+}
+```
+
+**Response**: 202 Accepted
+```json
+{
+  "status": "accepted",
+  "job_id": "xref-job-789"
+}
+```
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"against_collection_ids": [15, 20]}' \
+  https://aleph.example.com/api/2/collections/10/xref
+```
+
+**Notes**:
+- Queues a background job to generate matches
+- Uses machine learning scoring (GLM Bernoulli model)
+- Can take significant time for large collections
+- Results appear in GET `/xref` endpoint
+
+### POST /api/2/collections/:id/xref.xlsx
+
+Generate and download an Excel export of cross-reference results.
+
+**Auth**: Required (write access)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+
+**Request Body**: Same as POST `/xref`
+
+**Response**: 202 Accepted (creates export job)
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"against_collection_ids": [15]}' \
+  https://aleph.example.com/api/2/collections/10/xref.xlsx
+```
+
+**Notes**:
+- Creates an export accessible via `/api/2/exports`
+- Excel file contains entity pairs with scores and match details
+- Export expires after 7 days
+
