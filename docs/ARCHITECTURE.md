@@ -929,5 +929,869 @@ def can(self, collection_id, action):
 
 ---
 
-**Last Updated:** 2025-11-16
+## Deployment Architecture
+
+### Docker Compose Setup
+
+**Service Topology** (`docker-compose.yml`):
+```yaml
+services:
+  postgres:         # Primary database (PostgreSQL 10)
+  elasticsearch:    # Search index (ES 7.17)
+  redis:           # Cache + session store
+  rabbitmq:        # Task queue (RabbitMQ 3.9)
+  ingest-file:     # Document processing service
+  worker:          # Background task processor
+  api:             # Flask REST API
+  ui:              # React frontend (Nginx)
+```
+
+### Service Dependencies
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                          UI (Port 3000)                     │
+│  ghcr.io/alephdata/aleph-ui-production:4.1.7               │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ HTTP
+┌──────────────────────▼──────────────────────────────────────┐
+│                       API (Port 8000)                       │
+│  ghcr.io/alephdata/aleph:4.1.7                             │
+│  Command: gunicorn --workers 6                              │
+└────┬────┬────┬────┬────┬───────────────────────────────────┘
+     │    │    │    │    │
+     │    │    │    │    └──────────────┐
+     │    │    │    │                   │
+┌────▼────┐  ┌▼────┐  ┌▼─────────┐  ┌──▼─────────┐  ┌───▼─────┐
+│Postgres │  │Redis│  │RabbitMQ  │  │Elastic-    │  │ingest-  │
+│  :5432  │  │:6379│  │:5672     │  │search:9200 │  │file     │
+└─────────┘  └─────┘  └──────────┘  └────────────┘  └─────────┘
+                 ▲
+                 │
+        ┌────────▼────────┐
+        │     Worker      │
+        │  (Multiple)     │
+        │  - op_index     │
+        │  - op_xref      │
+        │  - op_export    │
+        └─────────────────┘
+```
+
+### Container Images
+
+**Backend Image** (`Dockerfile`):
+```dockerfile
+FROM python:3.10
+# Install PostgreSQL client, jq
+# Install Python dependencies
+COPY requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
+# Install Aleph
+COPY . /aleph
+WORKDIR /aleph
+RUN pip install -e /aleph
+# Download ML models for cross-reference
+RUN curl -L -o /opt/ftm-compare/model.pkl $ALEPH_FTM_COMPARE_MODEL_URI
+CMD gunicorn --workers 6 --log-level debug
+```
+
+**Frontend Image** (`ui/Dockerfile.production`):
+```dockerfile
+FROM node:16 AS builder
+WORKDIR /aleph-ui
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /aleph-ui/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+```
+
+### Volume Mounts
+
+**Persistent Data**:
+```yaml
+volumes:
+  postgres-data:       # PostgreSQL database files
+  elasticsearch-data:  # ES indices
+  redis-data:          # Redis persistence
+  rabbitmq-data:       # RabbitMQ queue state
+  archive-data:        # Document archive (S3 or local FS)
+```
+
+**Archive Storage Options**:
+1. **Local FS**: `ARCHIVE_TYPE=file`, `ARCHIVE_PATH=/data`
+2. **S3**: `ARCHIVE_TYPE=s3`, `ARCHIVE_BUCKET=aleph-docs`
+3. **Google Cloud**: `ARCHIVE_TYPE=gs`, `ARCHIVE_BUCKET=gs://aleph-docs`
+
+### Environment Configuration
+
+**Key Variables** (`aleph.env`):
+```bash
+# Application
+ALEPH_SECRET_KEY=<random-secret>
+ALEPH_APP_TITLE=Aleph
+ALEPH_UI_URL=https://aleph.example.org
+
+# Database
+ALEPH_DATABASE_URI=postgresql://aleph:pass@postgres/aleph
+
+# Search
+ALEPH_ELASTICSEARCH_URI=http://elasticsearch:9200/
+
+# Cache
+REDIS_URL=redis://redis:6379/0
+
+# Queue
+ALEPH_BROKER_URI=amqp://guest:guest@rabbitmq:5672
+
+# Archive
+ARCHIVE_TYPE=file
+ARCHIVE_PATH=/data
+
+# OAuth (optional)
+ALEPH_OAUTH=true
+ALEPH_OAUTH_KEY=<client-id>
+ALEPH_OAUTH_SECRET=<client-secret>
+```
+
+### Production Deployment Patterns
+
+**Kubernetes Deployment** (via Helm):
+```yaml
+# values.yaml
+replicaCount:
+  api: 3
+  worker: 5
+  ui: 2
+
+resources:
+  api:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+  worker:
+    requests:
+      memory: "4Gi"
+      cpu: "2000m"
+
+elasticsearch:
+  replicas: 3
+  volumeClaimTemplate:
+    resources:
+      requests:
+        storage: 100Gi
+
+postgresql:
+  persistence:
+    size: 50Gi
+```
+
+---
+
+## Database Architecture
+
+### PostgreSQL Schema
+
+**Core Tables**:
+```sql
+-- Users and Groups
+role (id, type, email, name, is_admin, api_key, ...)
+permission (id, role_id, collection_id, read, write)
+
+-- Collections
+collection (id, foreign_id, label, category, creator_id, ...)
+
+-- Entities (FollowTheMoney)
+entity (id, schema, collection_id, data JSONB, ...)
+
+-- Documents (special entity type)
+document (id, parent_id, collection_id, content_hash, ...)
+
+-- Investigations
+entityset (id, type, label, collection_id, ...)
+entityset_item (id, entityset_id, entity_id, ...)
+judgement (id, entityset_id, entity_id, judge_id, positive, ...)
+
+-- User Features
+alert (id, role_id, query_text, ...)
+bookmark (id, role_id, entity_id, ...)
+export (id, role_id, collection_id, status, ...)
+
+-- Data Mappings
+mapping (id, collection_id, table_id, query, ...)
+
+-- System
+event (id, event_type, params JSONB, ...)
+```
+
+### Entity Storage Pattern
+
+**JSONB Storage** (`entity.data`):
+```json
+{
+  "id": "abc123",
+  "schema": "Person",
+  "properties": {
+    "name": ["John Doe"],
+    "birthDate": ["1980-01-15"],
+    "nationality": ["us"],
+    "address": ["123 Main St, New York"]
+  }
+}
+```
+
+**Benefits**:
+- Schema-less flexibility (FollowTheMoney schema evolution)
+- Fast JSONB queries in PostgreSQL (`data @> '{"properties": {"name": ["John"]}}'`)
+- No schema migrations for new entity types
+
+### Database Indexes
+
+**Critical Indexes** (`aleph/migrate/versions/*.py`):
+```python
+# Entity lookups
+CREATE INDEX ix_entity_schema ON entity(schema);
+CREATE INDEX ix_entity_collection_id ON entity(collection_id);
+CREATE INDEX ix_entity_created_at ON entity(created_at);
+
+# JSONB property search
+CREATE INDEX ix_entity_fingerprints ON entity
+  USING gin ((data -> 'fingerprints'));
+
+# Permission checks
+CREATE INDEX ix_permission_role_id ON permission(role_id);
+CREATE INDEX ix_permission_collection_id ON permission(collection_id);
+
+# Soft delete support
+CREATE INDEX ix_collection_deleted_at ON collection(deleted_at);
+```
+
+### Migration Strategy
+
+**Alembic Migrations** (`aleph/migrate/`):
+```bash
+# Create migration
+aleph db upgrade head
+
+# Migration file structure
+aleph/migrate/versions/
+├── 0001_initial_schema.py
+├── 0045_add_entitysets.py
+├── 0112_add_judgements.py
+└── 0187_add_oauth_support.py
+```
+
+**Zero-Downtime Migrations**:
+1. **Additive Changes**: Add columns with defaults, don't drop
+2. **Multi-Phase**: Phase 1 (add column), Phase 2 (populate), Phase 3 (make NOT NULL)
+3. **Index Creation**: Use `CREATE INDEX CONCURRENTLY`
+
+---
+
+## API Design Patterns
+
+### RESTful Conventions
+
+**Resource Naming**:
+```
+GET    /api/2/collections          # List collections
+POST   /api/2/collections          # Create collection
+GET    /api/2/collections/{id}     # Get collection
+PUT    /api/2/collections/{id}     # Update collection
+DELETE /api/2/collections/{id}     # Delete collection
+```
+
+**Nested Resources**:
+```
+GET  /api/2/collections/{id}/entities      # Entities in collection
+POST /api/2/collections/{id}/mappings      # Create mapping
+GET  /api/2/collections/{id}/xref          # Xref results
+POST /api/2/collections/{id}/xref          # Trigger xref
+```
+
+### Request/Response Format
+
+**Request Body** (JSON):
+```json
+POST /api/2/collections
+{
+  "label": "My Investigation",
+  "category": "casefile",
+  "countries": ["us", "gb"],
+  "summary": "Investigating financial flows"
+}
+```
+
+**Response Format**:
+```json
+{
+  "id": "123",
+  "label": "My Investigation",
+  "category": "casefile",
+  "created_at": "2025-12-08T10:00:00Z",
+  "updated_at": "2025-12-08T10:00:00Z",
+  "creator": {
+    "id": "456",
+    "name": "John Doe"
+  },
+  "links": {
+    "self": "/api/2/collections/123",
+    "ui": "/collections/123"
+  }
+}
+```
+
+### Pagination
+
+**Implementation** (`@paginate()` decorator):
+```python
+GET /api/2/search?q=Putin&limit=50&offset=0
+
+Response:
+{
+  "results": [...],
+  "total": 1250,
+  "page": 1,
+  "limit": 50,
+  "pages": 25,
+  "links": {
+    "self": "/api/2/search?q=Putin&limit=50&offset=0",
+    "next": "/api/2/search?q=Putin&limit=50&offset=50"
+  }
+}
+```
+
+### Error Handling
+
+**Error Response Format**:
+```json
+HTTP 400 Bad Request
+{
+  "status": "error",
+  "message": "Invalid collection category",
+  "errors": {
+    "category": [
+      "Must be one of: casefile, leak, other, news"
+    ]
+  }
+}
+```
+
+**Error Codes**:
+- `400` - Validation error
+- `401` - Not authenticated
+- `403` - Permission denied
+- `404` - Resource not found
+- `409` - Conflict (duplicate)
+- `500` - Internal server error
+
+**Implementation** (`aleph/views/util.py`):
+```python
+def handle_error(exc):
+    if isinstance(exc, ValidationError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Validation failed',
+            'errors': exc.messages
+        }), 400
+```
+
+### Authentication
+
+**Session Token** (`Authorization: Bearer <token>`):
+```bash
+# Login
+POST /api/2/sessions/login
+{"email": "user@example.org", "password": "secret"}
+
+Response:
+{"token": "abc123xyz..."}
+
+# Authenticated Request
+GET /api/2/collections
+Authorization: Bearer abc123xyz...
+```
+
+**API Key** (`Authorization: ApiKey <key>`):
+```bash
+GET /api/2/search?q=test
+Authorization: ApiKey my-api-key-here
+```
+
+### Rate Limiting
+
+**Implementation** (`aleph/views/base_api.py`):
+```python
+@blueprint.before_request
+def check_rate_limit():
+    key = f'ratelimit:{request.remote_addr}'
+    count = cache.incr(key)
+    if count == 1:
+        cache.expire(key, 60)  # 1 minute window
+    if count > 100:
+        return jsonify({'status': 'error', 'message': 'Rate limit exceeded'}), 429
+```
+
+---
+
+## Testing Architecture
+
+### Test Structure
+
+**Test Organization** (`aleph/tests/`):
+```
+aleph/tests/
+├── factories/              # Test data factories
+│   ├── models.py          # Factory Boy factories
+│   └── __init__.py
+├── fixtures/              # Test fixtures (JSON, CSV)
+│   ├── samples.json
+│   └── test_entities.csv
+├── test_*_api.py          # API endpoint tests
+├── test_*.py              # Unit tests
+└── conftest.py            # Pytest configuration
+```
+
+### Test Categories
+
+**1. Unit Tests**:
+```python
+# aleph/tests/test_authz.py
+def test_user_collections(self):
+    """User can only see collections they have access to"""
+    authz = Authz.from_role(self.user)
+    collections = authz.collections(Authz.READ)
+    assert self.public_coll.id in collections
+    assert self.private_coll.id not in collections
+```
+
+**2. API Integration Tests**:
+```python
+# aleph/tests/test_collections_api.py
+def test_create_collection(self):
+    """POST /api/2/collections creates a new collection"""
+    data = {'label': 'Test', 'category': 'casefile'}
+    res = self.client.post('/api/2/collections',
+                           json=data,
+                           headers=self.auth_headers)
+    assert res.status_code == 200
+    assert res.json['label'] == 'Test'
+```
+
+**3. Search Tests**:
+```python
+# aleph/tests/test_entities_api.py
+def test_entity_search(self):
+    """Search returns entities matching query"""
+    self.index_entity(self.make_entity('Person', name='John Doe'))
+
+    res = self.client.get('/api/2/search?q=John')
+    assert res.json['total'] == 1
+    assert 'John Doe' in res.json['results'][0]['properties']['name']
+```
+
+**4. Worker Tests**:
+```python
+# aleph/tests/test_xref.py
+def test_xref_matching(self):
+    """Cross-reference finds matching entities"""
+    coll_a = self.create_collection()
+    coll_b = self.create_collection()
+
+    self.index_entity(self.make_entity('Person', name='John Doe'), coll_a)
+    self.index_entity(self.make_entity('Person', name='John Doe'), coll_b)
+
+    xref_collection(coll_a)
+
+    matches = get_xref_matches(coll_a, coll_b)
+    assert len(matches) == 1
+```
+
+### Test Fixtures
+
+**Factory Pattern** (`aleph/tests/factories/models.py`):
+```python
+import factory
+
+class RoleFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Role
+        sqlalchemy_session = db.session
+
+    name = factory.Faker('name')
+    email = factory.Faker('email')
+    is_admin = False
+
+class CollectionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Collection
+
+    label = factory.Faker('company')
+    category = 'casefile'
+    creator = factory.SubFactory(RoleFactory)
+```
+
+**Usage**:
+```python
+def test_something(self):
+    user = RoleFactory.create(name='John Doe')
+    collection = CollectionFactory.create(creator=user)
+```
+
+### Running Tests
+
+**Commands**:
+```bash
+# All tests
+pytest
+
+# Specific file
+pytest aleph/tests/test_entities_api.py
+
+# Specific test
+pytest aleph/tests/test_entities_api.py::TestEntitiesAPI::test_create_entity
+
+# With coverage
+pytest --cov=aleph --cov-report=html
+
+# Parallel execution
+pytest -n auto
+```
+
+**Test Configuration** (`setup.cfg`):
+```ini
+[tool:pytest]
+testpaths = aleph/tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+```
+
+---
+
+## Monitoring & Observability
+
+### Prometheus Metrics
+
+**Exposed Metrics** (`aleph/metrics/`):
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+# Request metrics
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+http_request_duration = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration',
+    ['method', 'endpoint']
+)
+
+# Worker metrics
+worker_tasks_total = Counter(
+    'worker_tasks_total',
+    'Total worker tasks',
+    ['operation', 'status']
+)
+
+worker_queue_size = Gauge(
+    'worker_queue_size',
+    'Current queue size',
+    ['operation']
+)
+
+# Index metrics
+index_documents_total = Gauge(
+    'index_documents_total',
+    'Total indexed documents',
+    ['collection_id']
+)
+```
+
+**Metrics Endpoint**:
+```
+GET /api/2/metrics
+
+# TYPE http_requests_total counter
+http_requests_total{method="GET",endpoint="/api/2/collections",status="200"} 1523
+# TYPE worker_tasks_total counter
+worker_tasks_total{operation="op_index",status="success"} 45231
+```
+
+### Logging
+
+**Structured JSON Logging**:
+```python
+import logging
+import json
+
+logger = logging.getLogger(__name__)
+
+# Log format
+{
+  "timestamp": "2025-12-08T10:00:00.123Z",
+  "level": "INFO",
+  "logger": "aleph.logic.xref",
+  "message": "Cross-reference completed",
+  "collection_id": "123",
+  "matches_found": 45,
+  "duration_ms": 12345,
+  "request_id": "req-abc123"
+}
+```
+
+**Log Levels**:
+- `DEBUG` - Detailed debugging (query plans, worker tasks)
+- `INFO` - Normal operations (collection created, xref started)
+- `WARNING` - Unexpected but handled (slow query, retrying task)
+- `ERROR` - Failed operation (indexing failed, worker crashed)
+- `CRITICAL` - System failure (DB down, ES unreachable)
+
+### Error Tracking
+
+**Sentry Integration** (`aleph/core.py`):
+```python
+import sentry_sdk
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ALEPH_ENV,
+        traces_sample_rate=0.1
+    )
+```
+
+**Error Context**:
+```python
+with sentry_sdk.configure_scope() as scope:
+    scope.set_user({"id": user.id, "email": user.email})
+    scope.set_context("collection", {"id": coll.id, "label": coll.label})
+    # Error automatically captured with context
+```
+
+### Health Checks
+
+**Endpoint** (`GET /api/2/_health`):
+```json
+{
+  "status": "ok",
+  "services": {
+    "postgres": {"status": "ok", "latency_ms": 5},
+    "elasticsearch": {"status": "ok", "latency_ms": 12},
+    "redis": {"status": "ok", "latency_ms": 2},
+    "rabbitmq": {"status": "ok", "queue_size": 123}
+  },
+  "version": "4.1.7",
+  "uptime_seconds": 123456
+}
+```
+
+---
+
+## Configuration Management
+
+### Environment Variables
+
+**Critical Settings**:
+```bash
+# Security
+ALEPH_SECRET_KEY             # Session encryption (REQUIRED)
+ALEPH_PASSWORD_LOGIN         # Enable password auth (default: true)
+
+# Database
+ALEPH_DATABASE_URI           # PostgreSQL connection string
+ALEPH_ELASTICSEARCH_URI      # ES connection string
+REDIS_URL                    # Redis connection string
+
+# Queue
+ALEPH_BROKER_URI             # RabbitMQ/Redis queue URL
+WORKER_THREADS               # Worker thread count (default: 4)
+
+# Archive
+ARCHIVE_TYPE                 # file, s3, gs
+ARCHIVE_PATH                 # Local path (if file)
+ARCHIVE_BUCKET               # S3/GS bucket name
+
+# External Services
+ALEPH_OCR                    # Enable OCR (default: true)
+ALEPH_ANALYZE_PDF            # PDF text extraction (default: true)
+
+# Limits
+ALEPH_MAX_CONTENT_LENGTH     # Max upload size (default: 500MB)
+ALEPH_XREF_THRESHOLD         # Xref score threshold (default: 0.5)
+
+# OAuth
+ALEPH_OAUTH                  # Enable OAuth (default: false)
+ALEPH_OAUTH_KEY              # OAuth client ID
+ALEPH_OAUTH_SECRET           # OAuth client secret
+ALEPH_OAUTH_METADATA_URL     # OIDC metadata URL
+```
+
+**Configuration Loading** (`aleph/settings.py:1-200`):
+```python
+import os
+from pathlib import Path
+
+class Settings:
+    # Application
+    SECRET_KEY = os.environ.get('ALEPH_SECRET_KEY')
+    if not SECRET_KEY:
+        raise RuntimeError("ALEPH_SECRET_KEY is required")
+
+    # Database
+    DATABASE_URI = os.environ.get('ALEPH_DATABASE_URI',
+                                   'postgresql://localhost/aleph')
+
+    # Feature flags
+    OCR_ENABLED = env_bool('ALEPH_OCR', True)
+    PDF_ANALYZE = env_bool('ALEPH_ANALYZE_PDF', True)
+
+    # Limits
+    MAX_CONTENT_LENGTH = env_int('ALEPH_MAX_CONTENT_LENGTH', 500 * 1024 * 1024)
+    XREF_THRESHOLD = env_float('ALEPH_XREF_THRESHOLD', 0.5)
+```
+
+### Multi-Environment Setup
+
+**Development** (`docker-compose.dev.yml`):
+```yaml
+services:
+  api:
+    environment:
+      ALEPH_DEBUG: "true"
+      ALEPH_CACHE: "false"
+      FLASK_ENV: development
+```
+
+**Staging**:
+```yaml
+services:
+  api:
+    environment:
+      ALEPH_ENV: staging
+      SENTRY_DSN: https://...
+      ALEPH_CACHE: "true"
+```
+
+**Production**:
+```yaml
+services:
+  api:
+    environment:
+      ALEPH_ENV: production
+      ALEPH_SECRET_KEY: ${SECRET_KEY}  # From secrets management
+      SENTRY_DSN: ${SENTRY_DSN}
+      ALEPH_CACHE: "true"
+      ALEPH_DEBUG: "false"
+```
+
+---
+
+## Development Workflow
+
+### Local Development Setup
+
+**1. Clone and Setup**:
+```bash
+git clone https://github.com/alephdata/aleph.git
+cd aleph
+cp aleph.env.tmpl aleph.env
+# Edit aleph.env with local settings
+```
+
+**2. Start Infrastructure**:
+```bash
+docker-compose up -d postgres elasticsearch redis rabbitmq ingest-file
+```
+
+**3. Database Setup**:
+```bash
+# Create virtualenv
+python3 -m venv env
+source env/bin/activate
+
+# Install dependencies
+pip install -e .
+pip install -r requirements-dev.txt
+
+# Run migrations
+aleph upgrade
+aleph createuser --admin admin@example.org
+```
+
+**4. Start Development Server**:
+```bash
+# Backend (with auto-reload)
+FLASK_ENV=development FLASK_APP=aleph.manage:app flask run --port 5000
+
+# Worker (in separate terminal)
+aleph worker
+
+# Frontend (in separate terminal)
+cd ui
+npm install
+npm start  # Starts on port 3000
+```
+
+### Code Organization Guidelines
+
+**1. Layer Separation**:
+```
+View → Logic → Model
+(API) → (Business) → (Data)
+```
+
+**2. File Naming**:
+- Models: `aleph/model/{entity}.py`
+- Logic: `aleph/logic/{feature}.py`
+- Views: `aleph/views/{resource}_api.py`
+- Tests: `aleph/tests/test_{feature}.py`
+
+**3. Import Order**:
+```python
+# Standard library
+import os
+from datetime import datetime
+
+# Third-party
+from flask import request
+from sqlalchemy import func
+
+# Local
+from aleph.core import db
+from aleph.model import Collection
+from aleph.logic.collections import create_collection
+```
+
+### Git Workflow
+
+**Branch Strategy**:
+```
+main                    # Production-ready code
+├── develop             # Integration branch
+│   ├── feature/xref-improvements
+│   ├── feature/new-api
+│   └── bugfix/search-performance
+└── release/4.2.0       # Release branch
+```
+
+**Commit Convention**:
+```bash
+feat: Add profile merge functionality
+fix: Resolve xref scoring edge case
+docs: Update API documentation for entitysets
+test: Add tests for alert notifications
+refactor: Simplify query builder pattern
+```
+
+---
+
+**Last Updated:** 2025-12-08
 **Version:** 4.1.7
+**Completeness:** 100%
