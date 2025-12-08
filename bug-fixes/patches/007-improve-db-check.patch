@@ -1,0 +1,18 @@
+diff --git a/aleph/core.py b/aleph/core.py
+index original..modified 100644
+--- a/aleph/core.py
++++ b/aleph/core.py
+@@ -67,8 +67,11 @@ def create_app(config=None):
+     app.config.from_object(SETTINGS)
+     app.config.update(config)
+
+-    if "postgres" not in SETTINGS.DATABASE_URI:
+-        raise RuntimeError("aleph database must be PostgreSQL!")
++    if not SETTINGS.DATABASE_URI.startswith(('postgresql://', 'postgresql+psycopg2://')):
++        raise RuntimeError(
++            "Aleph requires PostgreSQL. DATABASE_URI must start with "
++            "'postgresql://' or 'postgresql+psycopg2://'"
++        )
+
+     app.config.update(
+         {

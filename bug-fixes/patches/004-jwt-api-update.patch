@@ -1,0 +1,18 @@
+diff --git a/aleph/logic/util.py b/aleph/logic/util.py
+index original..modified 100644
+--- a/aleph/logic/util.py
++++ b/aleph/logic/util.py
+@@ -56,7 +56,12 @@ def archive_url(content_hash, file_name=None, mime_type=None, expire=None):
+
+
+ def archive_token(token):
+-    token = jwt.decode(token, key=SETTINGS.SECRET_KEY, algorithms=DECODE, verify=True)
++    # Use options parameter for PyJWT 2.x compatibility
++    token = jwt.decode(
++        token,
++        key=SETTINGS.SECRET_KEY,
++        algorithms=DECODE,
++        options={"verify_signature": True, "verify_exp": True},
++    )
+     expire = datetime.utcfromtimestamp(token["exp"])
+     return token.get("c"), token.get("f"), token.get("m"), expire

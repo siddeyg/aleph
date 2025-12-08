@@ -18,6 +18,7 @@ This is a comprehensive documentation collection for the Aleph project, created 
 
 ### For Developers
 - [Database Models Reference](./MODELS.md) - Complete schema documentation
+- [Security Audit Report](../bug-fixes/SECURITY_AUDIT.md) - Security analysis & patches
 - [Official Getting Started](/docs/src/pages/developers/getting-started/development-environment/index.mdx)
 - [Architecture Overview](/docs/src/pages/developers/explanation/architecture/index.mdx)
 - [Contributing Guidelines](/CONTRIBUTING.md)
@@ -44,6 +45,15 @@ Our enhanced documentation in the `cdocs/` directory:
 |------|-------------|--------|
 | [INDEX.md](./INDEX.md) | This file - complete documentation index | ✅ Complete |
 | [MODELS.md](./MODELS.md) | Comprehensive database schema reference | ✅ Complete |
+
+### bug-fixes/ - Security Audit & Patches
+
+Security audit and bug fixes documentation:
+
+| File | Description | Status |
+|------|-------------|--------|
+| [SECURITY_AUDIT.md](../bug-fixes/SECURITY_AUDIT.md) | Comprehensive security code review | ✅ Complete |
+| [patches/*.patch](../bug-fixes/patches/) | 7 ready-to-apply patches | ✅ Complete |
 
 ### docs/ - Official Documentation
 

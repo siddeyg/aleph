@@ -1,0 +1,17 @@
+diff --git a/aleph/settings.py b/aleph/settings.py
+index original..modified 100644
+--- a/aleph/settings.py
++++ b/aleph/settings.py
+@@ -67,7 +67,11 @@ class Settings:
+         )
+
+         # Cross-origin resource sharing
+-        self.CORS_ORIGINS = env.to_list("ALEPH_CORS_ORIGINS", ["*"], separator="|")
++        # Default to same-origin only for security. Explicitly set ALEPH_CORS_ORIGINS
++        # in production to allow specific trusted domains.
++        self.CORS_ORIGINS = env.to_list(
++            "ALEPH_CORS_ORIGINS", [self.APP_UI_URL], separator="|"
++        )
+
+         ##############################################################################
+         # Security and authentication.

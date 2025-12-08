@@ -1,0 +1,28 @@
+diff --git a/aleph/logic/api_keys.py b/aleph/logic/api_keys.py
+index original..modified 100644
+--- a/aleph/logic/api_keys.py
++++ b/aleph/logic/api_keys.py
+@@ -81,6 +81,8 @@ def _send_api_key_expiration_notification(
+         )
+     )
+
++    # Track role IDs to update after iteration
++    role_ids = []
+     for role in query:
+         expires_at = role.api_key_expires_at
+         params = {
+@@ -92,8 +94,13 @@ def _send_api_key_expiration_notification(
+         html = render_template(html_template, **params)
+         log.info(f"Sending API key expiration notification: {role} at {expires_at}")
+         email_role(role, subject, html=html, plain=plain)
++        role_ids.append(role.id)
+
+-    query.update({Role.api_key_expiration_notification_sent: days})
++    # Update roles after iteration to avoid exhausted query issue
++    Role.query.filter(Role.id.in_(role_ids)).update(
++        {Role.api_key_expiration_notification_sent: days},
++        synchronize_session=False
++    )
+     db.session.commit()
+
+

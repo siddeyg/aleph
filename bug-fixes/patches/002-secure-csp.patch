@@ -1,0 +1,21 @@
+diff --git a/aleph/settings.py b/aleph/settings.py
+index original..modified 100644
+--- a/aleph/settings.py
++++ b/aleph/settings.py
+@@ -61,10 +61,15 @@ class Settings:
+         self.APP_UI_URL = self.APP_PARSED_UI_URL.geturl()
+
+         # Content security policy:
++        # NOTE: If you need unsafe-inline or unsafe-eval for specific use cases,
++        # use CSP nonces or hashes instead. See:
++        # https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+         self.CONTENT_POLICY = env.get(
+             "ALEPH_CONTENT_POLICY",
+-            "default-src: 'self' 'unsafe-inline' 'unsafe-eval' data: *",
++            "default-src 'self'; "
++            "script-src 'self'; style-src 'self'; img-src 'self' data:; "
++            "font-src 'self'; connect-src 'self'; "
++            "frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+         )
+
+         # Cross-origin resource sharing
