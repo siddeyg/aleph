@@ -1308,3 +1308,332 @@ X-RateLimit-Reset: 1609459200
 
 **Last Updated:** 2025-11-16
 **Version:** 4.1.7
+
+---
+
+## Roles & Users
+
+### GET /api/2/roles/_suggest
+
+Suggest users matching a search prefix (autocomplete).
+
+**Auth**: Required (logged in)
+
+**Query Parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `prefix` | string | Email prefix (min 6 chars, required) |
+| `exclude:id` | string | Role IDs to exclude |
+
+**Response**:
+```json
+{
+  "total": 5,
+  "results": [
+    {
+      "id": "42",
+      "type": "user",
+      "email": "john@example.com",
+      "name": "John Doe"
+    }
+  ]
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/roles/_suggest?prefix=john@ex"
+```
+
+---
+
+### POST /api/2/roles/code
+
+Begin account registration by sending a verification code to an email.
+
+**Auth**: Public (registration must be enabled)
+
+**Request**:
+```json
+{
+  "email": "newuser@example.com"
+}
+```
+
+**Response**: 200 OK
+```json
+{
+  "status": "ok",
+  "message": "To proceed, please check your email."
+}
+```
+
+**Example**:
+```bash
+curl -X POST https://aleph.example.com/api/2/roles/code \
+  -H "Content-Type: application/json" \
+  -d '{"email": "newuser@example.com"}'
+```
+
+---
+
+### POST /api/2/roles
+
+Create a new user account after email verification.
+
+**Auth**: Public (registration must be enabled)
+
+**Request**:
+```json
+{
+  "code": "verification-code-from-email",
+  "name": "John Doe",
+  "password": "secure-password"
+}
+```
+
+**Response**: 201 Created
+```json
+{
+  "id": "123",
+  "email": "newuser@example.com",
+  "name": "John Doe",
+  "is_admin": false,
+  "type": "user"
+}
+```
+
+**Example**:
+```bash
+curl -X POST https://aleph.example.com/api/2/roles \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "abc123...",
+    "name": "John Doe",
+    "password": "mypassword"
+  }'
+```
+
+---
+
+### GET /api/2/roles/:id
+
+Retrieve role details (user or group).
+
+**Auth**: Required (must be able to read role)
+
+**Response**:
+```json
+{
+  "id": "42",
+  "type": "user",
+  "email": "user@example.com",
+  "name": "User Name",
+  "is_admin": false,
+  "created_at": "2023-01-15T10:00:00Z",
+  "has_password": true,
+  "has_api_key": true,
+  "locale": "en"
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/roles/42
+```
+
+---
+
+### PUT /api/2/roles/:id
+
+Update role settings (name, password, locale).
+
+**Auth**: Required (must be able to write role - usually own role)
+
+**Request**:
+```json
+{
+  "name": "Updated Name",
+  "password": "new-password",
+  "current_password": "old-password",
+  "locale": "de"
+}
+```
+
+**Response**: 200 OK
+
+**Example**:
+```bash
+curl -X PUT https://aleph.example.com/api/2/roles/42 \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "password": "new-secure-password",
+    "current_password": "old-password"
+  }'
+```
+
+---
+
+### POST /api/2/roles/:id/generate_api_key
+
+Generate a new API key for a role (invalidates old key).
+
+**Auth**: Required (must be able to write role)
+
+**Response**: 200 OK
+```json
+{
+  "id": "42",
+  "email": "user@example.com",
+  "api_key": "aleph-abc123def456...",
+  "api_key_expires_at": "2024-03-15T10:00:00Z"
+}
+```
+
+**Important**: The `api_key` field is only returned once during generation. Store it securely.
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_OLD_API_KEY" \
+  https://aleph.example.com/api/2/roles/42/generate_api_key
+```
+
+---
+
+## Groups
+
+### GET /api/2/groups
+
+List all groups the authenticated user belongs to.
+
+**Auth**: Required (logged in)
+
+**Response**:
+```json
+{
+  "total": 3,
+  "results": [
+    {
+      "id": "100",
+      "type": "group",
+      "name": "Editors",
+      "created_at": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "101",
+      "type": "group",
+      "name": "Analysts",
+      "created_at": "2023-02-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/groups
+```
+
+---
+
+## Permissions
+
+### GET /api/2/collections/:id/permissions
+
+Get all permissions for a collection.
+
+**Auth**: Required (must have WRITE access to collection)
+
+**Response**:
+```json
+{
+  "total": 4,
+  "results": [
+    {
+      "id": "1",
+      "role_id": "42",
+      "collection_id": "123",
+      "read": true,
+      "write": false,
+      "role": {
+        "id": "42",
+        "name": "John Doe",
+        "type": "user"
+      }
+    },
+    {
+      "id": "2",
+      "role_id": "100",
+      "collection_id": "123",
+      "read": true,
+      "write": true,
+      "role": {
+        "id": "100",
+        "name": "Editors",
+        "type": "group"
+      }
+    }
+  ]
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/collections/123/permissions
+```
+
+---
+
+### PUT /api/2/collections/:id/permissions
+
+Update permissions for a collection (grant/revoke access).
+
+**Auth**: Required (must have WRITE access to collection)
+
+**Request**:
+```json
+[
+  {
+    "role_id": "42",
+    "read": true,
+    "write": false
+  },
+  {
+    "role_id": "100",
+    "read": true,
+    "write": true
+  },
+  {
+    "role_id": "50",
+    "read": false,
+    "write": false
+  }
+]
+```
+
+**Response**: 200 OK (returns updated permissions list)
+
+**Example**:
+```bash
+curl -X PUT \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"role_id": "42", "read": true, "write": false},
+    {"role_id": "100", "read": true, "write": true}
+  ]' \
+  https://aleph.example.com/api/2/collections/123/permissions
+```
+
+**Notes**:
+- Setting `read=false` and `write=false` revokes all access
+- `write=true` automatically implies `read=true`
+- Public roles cannot have write access
+- Casefiles cannot be made public
+
