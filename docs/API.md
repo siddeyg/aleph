@@ -1863,3 +1863,233 @@ curl -X DELETE \
 - Silently succeeds even if bookmark doesn't exist
 - Only removes bookmarks owned by the current user
 
+---
+
+## Mappings
+
+Mappings define how to transform structured data (CSV/Excel tables) into Follow the Money entities. They are used for bulk data imports into collections.
+
+### GET /api/2/collections/:id/mappings
+
+List all mappings for a collection, optionally filtered by table.
+
+**Auth**: Required (can browse)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+
+**Query Parameters**:
+- `table` (string) - Filter by table entity ID
+- `limit` (integer) - Number of results to return
+- `offset` (integer) - Number of results to skip
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": 123,
+      "collection_id": 10,
+      "table_id": "abc123",
+      "query": {
+        "entities": {
+          "person": {
+            "schema": "Person",
+            "keys": ["full_name"],
+            "properties": {
+              "name": {"column": "full_name"},
+              "birthDate": {"column": "dob"}
+            }
+          }
+        }
+      },
+      "entityset_id": null,
+      "disabled": false,
+      "last_run_status": "success",
+      "last_run_err_msg": null,
+      "created_at": "2023-08-15T10:00:00Z",
+      "updated_at": "2023-08-16T12:30:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/collections/10/mappings?table=abc123"
+```
+
+### POST /api/2/collections/:id/mappings
+
+Create a new mapping to transform table data into entities.
+
+**Auth**: Required (collection write)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+
+**Request Body**:
+```json
+{
+  "table_id": "abc123",
+  "mapping_query": {
+    "entities": {
+      "person": {
+        "schema": "Person",
+        "keys": ["full_name"],
+        "properties": {
+          "name": {"column": "full_name"},
+          "birthDate": {"column": "date_of_birth"},
+          "nationality": {"column": "country"}
+        }
+      },
+      "company": {
+        "schema": "Company",
+        "keys": ["company_name"],
+        "properties": {
+          "name": {"column": "company_name"},
+          "jurisdiction": {"column": "country"}
+        }
+      }
+    }
+  },
+  "entityset": {
+    "entityset_id": 456
+  }
+}
+```
+
+**Response**: 200 OK (returns created Mapping object)
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @mapping-config.json \
+  https://aleph.example.com/api/2/collections/10/mappings
+```
+
+**Notes**:
+- `mapping_query` follows FollowTheMoney mapping format
+- `table_id` must be an entity in the same collection
+- Optional `entityset_id` to load entities into a specific investigation
+
+### GET /api/2/collections/:id/mappings/:mapping_id
+
+Retrieve a specific mapping configuration.
+
+**Auth**: Required (collection write)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+- `mapping_id` (integer) - Mapping ID
+
+**Response**: 200 OK (returns Mapping object)
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/collections/10/mappings/123
+```
+
+### PUT /api/2/collections/:id/mappings/:mapping_id
+
+Update an existing mapping configuration.
+
+**Auth**: Required (collection write)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+- `mapping_id` (integer) - Mapping ID
+
+**Request Body**: Same format as POST `/mappings`
+
+**Response**: 200 OK (returns updated Mapping object)
+
+**Example**:
+```bash
+curl -X PUT \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @updated-mapping.json \
+  https://aleph.example.com/api/2/collections/10/mappings/123
+```
+
+### POST /api/2/collections/:id/mappings/:mapping_id/trigger
+
+Execute the mapping to load entities from the table. Flushes previously loaded entities before loading new ones.
+
+**Auth**: Required (collection write)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+- `mapping_id` (integer) - Mapping ID
+
+**Response**: 202 Accepted
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/collections/10/mappings/123/trigger
+```
+
+**Notes**:
+- Queues a background job to process the mapping
+- Sets mapping status to PENDING
+- Enables the mapping if previously disabled
+- Previous entities from this mapping are deleted before loading new ones
+
+### POST /api/2/collections/:id/mappings/:mapping_id/flush
+
+Remove all entities that were loaded by this mapping.
+
+**Auth**: Required (collection write)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+- `mapping_id` (integer) - Mapping ID
+
+**Response**: 202 Accepted
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/collections/10/mappings/123/flush
+```
+
+**Notes**:
+- Queues a background job to delete entities
+- Disables the mapping
+- Clears last run status and error messages
+
+### DELETE /api/2/collections/:id/mappings/:mapping_id
+
+Delete a mapping and flush all entities loaded by it.
+
+**Auth**: Required (collection write)
+
+**Path Parameters**:
+- `id` (integer) - Collection ID
+- `mapping_id` (integer) - Mapping ID
+
+**Response**: 204 No Content
+
+**Example**:
+```bash
+curl -X DELETE \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/collections/10/mappings/123
+```
+
+**Notes**:
+- Permanently deletes the mapping configuration
+- Queues a job to flush all entities created by this mapping
+- Cannot be undone
+
