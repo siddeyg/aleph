@@ -13,7 +13,7 @@
 
 **Version:** 4.1.7
 **License:** MIT
-**Repository:** `/home/user/aleph`
+**Repository:** `/media/cy/Daten1/projects/aleph`
 **Primary Use Case:** Document sifting and cross-referencing for investigative reporting
 
 ### Core Capabilities
