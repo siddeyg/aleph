@@ -27,6 +27,8 @@ Complete documentation for the Aleph investigative data platform.
 | Document | Description | Audience |
 |----------|-------------|----------|
 | [MODELS.md](./MODELS.md) | Database schema and data models | Developers, DBAs |
+| [WORKFLOWS.md](./WORKFLOWS.md) | User workflows and common tasks | Users, Analysts, Developers |
+| [DATA_PIPELINES.md](./DATA_PIPELINES.md) | Data flow and processing pipelines | Developers, Architects |
 | [CONFIGURATION.md](./CONFIGURATION.md) | Environment variables and settings | Administrators |
 | [SECURITY.md](./SECURITY.md) | Security features and best practices | Security Engineers |
 | [PERFORMANCE.md](./PERFORMANCE.md) | Performance tuning and optimization | DevOps |
@@ -78,12 +80,14 @@ Complete documentation for the Aleph investigative data platform.
 
 1. [Development Setup](./DEVELOPMENT.md) - Getting started
 2. [Architecture](./ARCHITECTURE.md) - System design
-3. [API Reference](./API.md) - Integration endpoints
-4. [Data Models](./MODELS.md) - Database schema
-5. [Command Reference](./COMMANDS.md) - CLI tools
-6. [FollowTheMoney](./FOLLOWTHEMONEY.md) - Entity schema
-7. [Testing](./TESTING.md) - Writing and running tests
-8. [Workers](./WORKERS.md) - Background processing
+3. [API Reference](./API.md) - Complete endpoint documentation (86 endpoints)
+4. [Data Models](./MODELS.md) - Database schema (12 models)
+5. [Data Pipelines](./DATA_PIPELINES.md) - Processing workflows and data flow
+6. [Workflows](./WORKFLOWS.md) - User workflows and common tasks
+7. [Command Reference](./COMMANDS.md) - CLI tools
+8. [FollowTheMoney](./FOLLOWTHEMONEY.md) - Entity schema
+9. [Testing](./TESTING.md) - Writing and running tests
+10. [Workers](./WORKERS.md) - Background processing
 
 ### For DevOps/Administrators
 
@@ -249,9 +253,11 @@ Read [claude.md](../claude.md) to understand what Aleph is and its core capabili
 | COMMANDS.md | ✅ Complete | 2025-11-16 | 100% |
 | INDEX.md | ✅ Complete | 2025-12-08 | 100% |
 | MODELS.md | ✅ Complete | 2025-12-08 | 100% |
+| API.md | ✅ Complete | 2025-12-08 | 100% (86/86 endpoints) |
+| WORKFLOWS.md | ✅ Complete | 2025-12-08 | 100% (10 workflows) |
+| DATA_PIPELINES.md | ✅ Complete | 2025-12-08 | 100% (4 pipelines) |
+| SECURITY_AUDIT.md | ✅ Complete | 2025-12-08 | 100% (7 issues) |
 | ARCHITECTURE.md | 📝 In Progress | 2025-11-16 | 80% |
-| API.md | 📝 In Progress | 2025-11-16 | 40% (34/86 endpoints) |
-| SECURITY_AUDIT.md | ✅ Complete | 2025-12-08 | 100% |
 | DEVELOPMENT.md | 📝 In Progress | 2025-11-16 | 75% |
 | DEPLOYMENT.md | 📝 In Progress | 2025-11-16 | 70% |
 | CONFIGURATION.md | 📝 In Progress | 2025-11-16 | 80% |
