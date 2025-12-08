@@ -2093,3 +2093,356 @@ curl -X DELETE \
 - Queues a job to flush all entities created by this mapping
 - Cannot be undone
 
+---
+
+## EntitySets (Investigations)
+
+EntitySets are collections of entities grouped for analysis. Types include: **lists**, **diagrams**, **timelines**, and **profiles**.
+
+### GET /api/2/entitysets
+
+List all entity sets accessible to the current user, optionally filtered by collection or type.
+
+**Auth**: Required (can browse)
+
+**Query Parameters**:
+- `filter:collection_id` (integer) - Filter by collection ID
+- `filter:type` (string) - Filter by type: `list`, `diagram`, `timeline`, `profile`
+- `prefix` (string) - Search entity sets by name prefix
+- `limit` (integer) - Number of results
+- `offset` (integer) - Results offset
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": "3a0d91ece2dce88ad3259594c7b642485235a048",
+      "type": "diagram",
+      "label": "Panama Papers Network",
+      "summary": "Key entities and relationships",
+      "collection_id": 10,
+      "layout": {},
+      "entities_count": 25,
+      "created_at": "2023-08-15T10:00:00Z",
+      "updated_at": "2023-08-20T14:30:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/entitysets?filter:collection_id=10&filter:type=diagram"
+```
+
+### POST /api/2/entitysets
+
+Create a new entity set (investigation, diagram, list, or timeline).
+
+**Auth**: Required (collection write)
+
+**Request Body**:
+```json
+{
+  "type": "diagram",
+  "label": "Corruption Network",
+  "summary": "Investigation into offshore companies",
+  "collection": {
+    "collection_id": 10
+  },
+  "layout": {
+    "entities": {},
+    "groupings": [],
+    "selection": []
+  }
+}
+```
+
+**Response**: 200 OK (returns created EntitySet object)
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @entityset-config.json \
+  https://aleph.example.com/api/2/entitysets
+```
+
+**Notes**:
+- Valid types: `list`, `diagram`, `timeline`, `profile`
+- Entity set is created in the specified collection
+- `layout` is required for diagrams, stores visual layout data
+
+### GET /api/2/entitysets/:id
+
+Retrieve a specific entity set by ID. Profiles are redirected to the profiles endpoint.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Response**: 200 OK
+```json
+{
+  "id": "3a0d91ece2dce88ad3259594c7b642485235a048",
+  "type": "diagram",
+  "label": "Corruption Network",
+  "summary": "Investigation details",
+  "collection_id": 10,
+  "layout": {
+    "entities": {
+      "entity-1": {"x": 100, "y": 200}
+    }
+  },
+  "entities_count": 15,
+  "shallow": false
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048
+```
+
+### PUT /api/2/entitysets/:id
+
+Update an entity set's metadata and layout.
+
+**Auth**: Required (write access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Request Body**:
+```json
+{
+  "label": "Updated Network Name",
+  "summary": "Updated description",
+  "layout": {
+    "entities": {
+      "entity-1": {"x": 150, "y": 250}
+    }
+  }
+}
+```
+
+**Response**: 200 OK (returns updated EntitySet object)
+
+**Example**:
+```bash
+curl -X PUT \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @updated-entityset.json \
+  https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048
+```
+
+**Notes**:
+- Triggers a refresh of the entity set in the background
+- Updates `updated_at` timestamp
+
+### DELETE /api/2/entitysets/:id
+
+Delete an entity set. This does NOT delete the entities themselves, only the entity set container.
+
+**Auth**: Required (write access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Response**: 204 No Content
+
+**Example**:
+```bash
+curl -X DELETE \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048
+```
+
+**Notes**:
+- Entities in the set remain in their collections
+- Judgements (positive/negative matches) are preserved
+- Cannot be undone
+
+### GET /api/2/entitysets/:id/entities
+
+Search and filter entities within an entity set. Supports all standard entity search parameters.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Query Parameters**: (same as `/api/2/search`)
+- `q` (string) - Search query
+- `filter:schema` (string) - Filter by entity type
+- `filter:countries` (string) - Filter by country
+- `limit`, `offset` - Pagination
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": "entity-123",
+      "schema": "Person",
+      "properties": {
+        "name": ["John Doe"]
+      },
+      "collection_id": 10
+    }
+  ],
+  "total": 15,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  "https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048/entities?q=John"
+```
+
+**Notes**:
+- Only returns entities with positive judgement (confirmed members)
+- Use `/items` endpoint to see all items including negative/unsure judgements
+
+### POST /api/2/entitysets/:id/entities
+
+Create or update an entity and add it to the entity set.
+
+**Auth**: Required (write access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Query Parameters**:
+- `sign` (boolean) - Sign entity IDs in nested properties (default: false)
+
+**Request Body**:
+```json
+{
+  "id": "optional-entity-id",
+  "schema": "Person",
+  "properties": {
+    "name": ["Jane Smith"],
+    "birthDate": ["1980-05-15"],
+    "nationality": ["US"]
+  }
+}
+```
+
+**Response**: 200 OK (returns Entity object)
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @entity-data.json \
+  https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048/entities
+```
+
+**Notes**:
+- If entity ID is not provided, a new one is generated
+- If entity exists and user can't edit it, it's just added to the set
+- New entities are created in the entity set's collection
+- Automatically adds entity to the set with positive judgement
+
+### GET /api/2/entitysets/:id/items
+
+Get ALL items in the entity set, including those with negative or unsure judgements.
+
+**Auth**: Required (read access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": "3a0d91ece2dce88ad3259594c7b642485235a048$entity-123",
+      "entityset_id": "3a0d91ece2dce88ad3259594c7b642485235a048",
+      "entity_id": "entity-123",
+      "collection_id": 10,
+      "judgement": "positive",
+      "added_by_id": "user-456",
+      "created_at": "2023-08-15T10:00:00Z"
+    },
+    {
+      "id": "3a0d91ece2dce88ad3259594c7b642485235a048$entity-789",
+      "entityset_id": "3a0d91ece2dce88ad3259594c7b642485235a048",
+      "entity_id": "entity-789",
+      "collection_id": 10,
+      "judgement": "negative",
+      "added_by_id": "user-456",
+      "created_at": "2023-08-16T14:00:00Z"
+    }
+  ],
+  "total": 2
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048/items
+```
+
+**Notes**:
+- Returns items with all judgements: `positive`, `negative`, `unsure`, `no_judgement`
+- Use this for cross-reference review workflows
+- Different from `/entities` which only returns positive matches
+
+### POST /api/2/entitysets/:id/items
+
+Add an entity to the set or change its judgement. Set `no_judgement` to remove an item.
+
+**Auth**: Required (write access)
+
+**Path Parameters**:
+- `id` (string) - Entity set ID
+
+**Request Body**:
+```json
+{
+  "entity_id": "entity-123",
+  "judgement": "positive"
+}
+```
+
+**Judgement Values**:
+- `positive` - Confirmed match/member
+- `negative` - Rejected match
+- `unsure` - Requires review
+- `no_judgement` - Removes the item from the set
+
+**Response**:
+- 200 OK (returns EntitySetItem) if judgement is not `no_judgement`
+- 204 No Content if item was removed
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"entity_id": "entity-123", "judgement": "positive"}' \
+  https://aleph.example.com/api/2/entitysets/3a0d91ece2dce88ad3259594c7b642485235a048/items
+```
+
+**Notes**:
+- Used for managing entity set membership
+- Critical for cross-reference match review
+- Triggers entity reindex in background
+
