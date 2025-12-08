@@ -1637,3 +1637,229 @@ curl -X PUT \
 - Public roles cannot have write access
 - Casefiles cannot be made public
 
+---
+
+## Alerts
+
+Alerts are saved search queries that notify users when new matching content appears.
+
+### GET /api/2/alerts
+
+List all alerts created by the authenticated user.
+
+**Auth**: Required (logged in)
+
+**Query Parameters**:
+- `limit` (integer) - Number of results to return (pagination)
+- `offset` (integer) - Number of results to skip (pagination)
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": 42,
+      "query": "Putin AND offshore",
+      "query_text": "Putin AND offshore",
+      "created_at": "2023-08-15T10:30:00Z",
+      "updated_at": "2023-08-15T10:30:00Z",
+      "role_id": "123",
+      "notified_at": null
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/alerts
+```
+
+### POST /api/2/alerts
+
+Create a new alert for a search query. The system will notify the user when new entities match this query.
+
+**Auth**: Required (session write)
+
+**Request Body**:
+```json
+{
+  "query": "Putin AND offshore",
+  "query_text": "Putin AND offshore"
+}
+```
+
+**Response**: 200 OK (returns created Alert object)
+```json
+{
+  "id": 42,
+  "query": "Putin AND offshore",
+  "query_text": "Putin AND offshore",
+  "created_at": "2023-08-15T10:30:00Z",
+  "updated_at": "2023-08-15T10:30:00Z",
+  "role_id": "123",
+  "notified_at": null
+}
+```
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Putin AND offshore"}' \
+  https://aleph.example.com/api/2/alerts
+```
+
+### GET /api/2/alerts/:id
+
+Retrieve a specific alert by ID. User can only access their own alerts.
+
+**Auth**: Required (logged in)
+
+**Path Parameters**:
+- `id` (integer) - Alert ID
+
+**Response**: 200 OK
+```json
+{
+  "id": 42,
+  "query": "Putin AND offshore",
+  "query_text": "Putin AND offshore",
+  "created_at": "2023-08-15T10:30:00Z",
+  "updated_at": "2023-08-15T10:30:00Z",
+  "role_id": "123",
+  "notified_at": "2023-08-16T09:00:00Z"
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/alerts/42
+```
+
+### DELETE /api/2/alerts/:id
+
+Delete a specific alert. User can only delete their own alerts.
+
+**Auth**: Required (session write)
+
+**Path Parameters**:
+- `id` (integer) - Alert ID
+
+**Response**: 204 No Content
+
+**Example**:
+```bash
+curl -X DELETE \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/alerts/42
+```
+
+---
+
+## Bookmarks
+
+Bookmarks allow users to save entities for quick access later.
+
+### GET /api/2/bookmarks
+
+Get all bookmarks created by the current user. Only returns bookmarks for entities in collections the user has read access to.
+
+**Auth**: Required (logged in)
+
+**Query Parameters**:
+- `limit` (integer) - Number of results to return (pagination)
+- `offset` (integer) - Number of results to skip (pagination)
+
+**Response**: 200 OK
+```json
+{
+  "results": [
+    {
+      "id": 789,
+      "entity_id": "a1b2c3d4e5f6",
+      "collection_id": 10,
+      "role_id": "123",
+      "created_at": "2023-08-15T14:20:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Example**:
+```bash
+curl -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/bookmarks
+```
+
+**Notes**:
+- Bookmarks are automatically filtered by collection access permissions
+- Results ordered by creation date (newest first)
+
+### POST /api/2/bookmarks
+
+Bookmark an entity. If the entity is already bookmarked by the user, returns the existing bookmark.
+
+**Auth**: Required (session write)
+
+**Request Body**:
+```json
+{
+  "entity_id": "a1b2c3d4e5f6"
+}
+```
+
+**Response**: 201 Created
+```json
+{
+  "id": 789,
+  "entity_id": "a1b2c3d4e5f6",
+  "collection_id": 10,
+  "role_id": "123",
+  "created_at": "2023-08-15T14:20:00Z"
+}
+```
+
+**Errors**:
+- 400 Bad Request - Entity does not exist or user lacks read access
+
+**Example**:
+```bash
+curl -X POST \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"entity_id": "a1b2c3d4e5f6"}' \
+  https://aleph.example.com/api/2/bookmarks
+```
+
+### DELETE /api/2/bookmarks/:entity_id
+
+Remove a bookmark for the specified entity.
+
+**Auth**: Required (session write)
+
+**Path Parameters**:
+- `entity_id` (string) - ID of the bookmarked entity
+
+**Response**: 204 No Content
+
+**Example**:
+```bash
+curl -X DELETE \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  https://aleph.example.com/api/2/bookmarks/a1b2c3d4e5f6
+```
+
+**Notes**:
+- Silently succeeds even if bookmark doesn't exist
+- Only removes bookmarks owned by the current user
+
