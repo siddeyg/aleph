@@ -257,10 +257,10 @@ Read [claude.md](../claude.md) to understand what Aleph is and its core capabili
 | WORKFLOWS.md | ✅ Complete | 2025-12-08 | 100% (10 workflows) |
 | DATA_PIPELINES.md | ✅ Complete | 2025-12-08 | 100% (4 pipelines) |
 | SECURITY_AUDIT.md | ✅ Complete | 2025-12-08 | 100% (7 issues) |
-| ARCHITECTURE.md | 📝 In Progress | 2025-11-16 | 80% |
-| DEVELOPMENT.md | 📝 In Progress | 2025-11-16 | 75% |
-| DEPLOYMENT.md | 📝 In Progress | 2025-11-16 | 70% |
-| CONFIGURATION.md | 📝 In Progress | 2025-11-16 | 80% |
+| ARCHITECTURE.md | ✅ Complete | 2025-12-08 | 100% (1797 lines) |
+| CONFIGURATION.md | ✅ Complete | 2025-12-08 | 100% (1476 lines) |
+| DEVELOPMENT.md | ✅ Complete | 2025-12-08 | 100% (1218 lines) |
+| DEPLOYMENT.md | ✅ Complete | 2025-12-08 | 100% (1358 lines) |
 | Other docs | ⏳ Planned | - | 0% |
 
 **Legend:**

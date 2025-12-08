@@ -648,6 +648,79 @@ Each pipeline includes:
 - **Issues**: 1 CRITICAL, 2 HIGH, 1 MEDIUM, 3 LOW severity
 - Includes patches in `bug-fixes/patches/` directory
 
+### Phase 4: Core Documentation (100% Complete)
+
+**ARCHITECTURE.md** - System Architecture & Design Patterns
+- **Status**: ✅ Complete (1797 lines)
+- **Date Completed**: 2025-12-08
+- **Coverage**:
+  - System overview and component architecture
+  - Backend architecture (Model-Logic-View layers)
+  - Frontend architecture (React, Redux)
+  - Data flow (ingestion, xref, search pipelines)
+  - Search architecture (Elasticsearch)
+  - Worker architecture (task queue system)
+  - Design patterns (soft delete, authz caching, proxy pattern)
+  - Deployment architecture (Docker Compose, Kubernetes)
+  - Database architecture (PostgreSQL schema, indexes, migrations)
+  - API design patterns (REST, pagination, error handling)
+  - Testing architecture (unit, integration, factories)
+  - Monitoring & observability (Prometheus, logging, Sentry)
+  - Configuration management
+  - Development workflow
+
+**CONFIGURATION.md** - Complete Configuration Reference
+- **Status**: ✅ Complete (1476 lines)
+- **Date Completed**: 2025-12-08
+- **Coverage**:
+  - Configuration overview and hierarchy
+  - Required settings (SECRET_KEY, DATABASE_URI)
+  - Application settings (branding, security headers)
+  - Security & authentication (OAuth, password, session)
+  - Database & search (PostgreSQL, Elasticsearch, Redis)
+  - Email configuration (SMTP examples for Gmail, SendGrid, AWS SES)
+  - Content processing (language, limits, notifications)
+  - Worker configuration (queue settings, stages, QOS)
+  - Monitoring (Sentry, Prometheus)
+  - Feature flags
+  - Environment examples (development, staging, production)
+  - Best practices (security, performance, reliability)
+  - Troubleshooting guide
+
+**DEVELOPMENT.md** - Developer Guide
+- **Status**: ✅ Complete (1218 lines)
+- **Date Completed**: 2025-12-08
+- **Coverage**:
+  - Quick start and prerequisites
+  - Development setup (Docker and native)
+  - Running Aleph locally
+  - Frontend development (React, Redux, TypeScript)
+  - Backend development (Flask, SQLAlchemy, API)
+  - Testing (backend pytest, frontend Jest)
+  - Code quality (ruff, black, ESLint, Prettier)
+  - Database migrations (Alembic)
+  - Debugging (VSCode, PyCharm, debugpy, DevTools)
+  - Common development tasks
+  - Contributing guidelines (workflow, commit format)
+  - Troubleshooting guide
+
+**DEPLOYMENT.md** - Production Deployment Guide
+- **Status**: ✅ Complete (1358 lines)
+- **Date Completed**: 2025-12-08
+- **Coverage**:
+  - Deployment overview and architecture
+  - Prerequisites and hardware requirements
+  - Docker Compose deployment (step-by-step)
+  - Kubernetes/Helm deployment with values
+  - SSL/TLS configuration (Let's Encrypt, custom certs)
+  - Production configuration (DB, ES, archive)
+  - Backup and restore (automated scripts)
+  - Monitoring and logging (Prometheus, Grafana, ELK)
+  - Scaling (horizontal, vertical, load balancing)
+  - Security hardening (network, app, database, secrets)
+  - Updating Aleph and rollback procedures
+  - Troubleshooting guide
+
 ### Documentation Statistics
 
 | Metric | Count | Status |
@@ -657,13 +730,46 @@ Each pipeline includes:
 | **Data Pipelines Documented** | 4 | Complete ✅ |
 | **Database Models Documented** | 12/12 | 100% ✅ |
 | **Security Issues Identified** | 7 | Patched ✅ |
-| **Total Documentation Files** | 7 | Core Complete ✅ |
-| **Total Lines of Documentation** | ~8,000+ | - |
-| **Code Examples Included** | 200+ | - |
+| **Core Documentation Files** | 11 | Complete ✅ |
+| **Total Lines of Documentation** | ~13,000+ | - |
+| **Code Examples Included** | 400+ | - |
 
 ### Work Summary
 
-#### Session Accomplishments
+#### Current Session Accomplishments (2025-12-08)
+1. **Completed ARCHITECTURE.md** from 80% to 100% (1797 lines)
+   - Added deployment architecture (Docker Compose, Kubernetes)
+   - Added database architecture (PostgreSQL, indexes, migrations)
+   - Added API design patterns (REST, error handling, auth)
+   - Added testing architecture (unit, integration, fixtures)
+   - Added monitoring & observability (Prometheus, logging, Sentry)
+   - Added configuration management and development workflow
+
+2. **Created CONFIGURATION.md** from scratch (1476 lines)
+   - Documented all 80+ environment variables
+   - Added required vs optional settings
+   - Included SMTP examples for Gmail, SendGrid, AWS SES
+   - Added environment examples (dev, staging, production)
+   - Added best practices and troubleshooting guide
+
+3. **Created DEVELOPMENT.md** from scratch (1218 lines)
+   - Complete development setup guide (Docker and native)
+   - Frontend development (React, Redux, TypeScript)
+   - Backend development (Flask, SQLAlchemy, API)
+   - Testing, code quality, database migrations
+   - Debugging with VSCode, PyCharm, debugpy
+   - Contributing guidelines and troubleshooting
+
+4. **Created DEPLOYMENT.md** from scratch (1358 lines)
+   - Docker Compose deployment (step-by-step)
+   - Kubernetes/Helm deployment with values
+   - SSL/TLS configuration (Let's Encrypt, custom certs)
+   - Backup and restore with automated scripts
+   - Monitoring and logging (Prometheus, Grafana, ELK)
+   - Scaling and security hardening
+   - Update procedures and troubleshooting
+
+#### Previous Session Accomplishments (2025-12-08)
 1. **Completed API.md** from 40% (34 endpoints) to 100% (86 endpoints)
    - Added 52 endpoints with full documentation
    - Included request/response examples for all endpoints
