@@ -2,7 +2,7 @@
 
 This document tracks the progress of documenting the Aleph codebase, including completed work, in-progress items, and planned documentation.
 
-**Last Updated**: 2025-12-08
+**Last Updated**: 2025-12-09
 
 ---
 
@@ -10,9 +10,9 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 | Category | Count | Percentage |
 |----------|-------|------------|
-| **Completed Docs** | 12 / 35 | 34% |
-| **Lines Documented** | ~14,100+ | - |
-| **Code Examples** | 450+ | - |
+| **Completed Docs** | 13 / 35 | 37% |
+| **Lines Documented** | ~16,200+ | - |
+| **Code Examples** | 500+ | - |
 | **API Endpoints** | 86 / 86 | 100% |
 | **Workflows** | 10 / 10 | 100% |
 | **Pipelines** | 4 / 4 | 100% |
@@ -196,13 +196,14 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 ## Phase 5: Feature Documentation (In Progress) 🚧
 
-### Current: Search Documentation
+### Completed Features
 
 | Document | Status | Lines | Date Completed | Description |
 |----------|--------|-------|----------------|-------------|
 | **SEARCH.md** | ✅ Complete | 1,100+ | 2025-12-08 | Search capabilities and query syntax |
+| **XREF.md** | ✅ Complete | 2,100+ | 2025-12-09 | Cross-reference matching system |
 
-**Coverage** (100%):
+**SEARCH.md Coverage** (100%):
 - [x] Search overview and architecture
 - [x] Quick start guide
 - [x] Complete Search API reference
@@ -216,27 +217,30 @@ This document tracks the progress of documenting the Aleph codebase, including c
 - [x] Performance optimization
 - [x] Comprehensive troubleshooting
 
+**XREF.md Coverage** (100%):
+- [x] Cross-reference overview
+- [x] Matching algorithm (FTM and ML model)
+- [x] Fingerprint extraction
+- [x] Scoring and thresholds
+- [x] User decisions and judgements
+- [x] Profile merging
+- [x] Review workflow
+- [x] API endpoints (4 endpoints)
+- [x] Frontend integration
+- [x] Configuration and tuning
+- [x] Performance optimization
+- [x] Comprehensive troubleshooting
+
 ### Planned Core Features
 
 | Document | Status | Priority | Est. Lines | Description |
 |----------|--------|----------|------------|-------------|
-| **XREF.md** | ⏳ Planned | High | 800+ | Cross-reference matching system |
 | **COLLECTIONS.md** | ⏳ Planned | High | 600+ | Collection management guide |
 | **ENTITIES.md** | ⏳ Planned | High | 800+ | Entity types and FollowTheMoney |
 | **INVESTIGATIONS.md** | ⏳ Planned | High | 700+ | EntitySets, diagrams, timelines |
 | **INGESTION.md** | ⏳ Planned | Medium | 600+ | Document upload and processing |
 
 **Coverage Plan**:
-
-**XREF.md**:
-- [ ] Cross-reference overview
-- [ ] Matching algorithm (ML model)
-- [ ] Fingerprint extraction
-- [ ] Scoring and thresholds
-- [ ] Review workflow
-- [ ] API endpoints
-- [ ] Performance tuning
-- [ ] Troubleshooting
 
 **COLLECTIONS.md**:
 - [ ] Collection types and categories
@@ -467,8 +471,8 @@ Each document should include:
 
 ### Immediate Priorities (Phase 5)
 
-1. ✅ **SEARCH.md** - Currently in progress
-2. **XREF.md** - Next after SEARCH.md
+1. ✅ **SEARCH.md** - Complete
+2. ✅ **XREF.md** - Complete
 3. **COLLECTIONS.md** - Core feature documentation
 4. **ENTITIES.md** - Critical for understanding data model
 5. **INVESTIGATIONS.md** - Key user feature
@@ -493,6 +497,13 @@ Each document should include:
 
 ## Recent Activity Log
 
+### 2025-12-09 (Session 3)
+- ✅ Completed SEARCH.md (0% → 100%, 1,100+ lines)
+- ✅ Completed XREF.md (0% → 100%, 2,100+ lines)
+- ✅ Updated DOCUMENTATION_PROGRESS.md with completions
+- 📊 Progress: 37% complete (13/35 documents)
+- 📊 Lines documented: ~16,200+ total
+
 ### 2025-12-08 (Session 2)
 - ✅ Completed ARCHITECTURE.md (80% → 100%, +863 lines)
 - ✅ Created CONFIGURATION.md (0% → 100%, 1476 lines)
@@ -500,7 +511,7 @@ Each document should include:
 - ✅ Created DEPLOYMENT.md (0% → 100%, 1358 lines)
 - ✅ Updated INDEX.md with completion status
 - ✅ Updated claude.md with Phase 4 summary
-- 🚧 Started SEARCH.md documentation
+- ✅ Created DOCUMENTATION_PROGRESS.md tracker
 
 ### 2025-12-08 (Session 1)
 - ✅ Completed API.md (40% → 100%, +52 endpoints)
@@ -537,6 +548,6 @@ See `docs/templates/` for:
 
 ---
 
-**Total Estimated Remaining Work**: ~15,000 lines across 24 documents
-**Current Progress**: 31% complete (11/35 documents)
-**Estimated Completion**: 6-8 weeks at current pace
+**Total Estimated Remaining Work**: ~12,000 lines across 22 documents
+**Current Progress**: 37% complete (13/35 documents)
+**Estimated Completion**: 5-7 weeks at current pace
