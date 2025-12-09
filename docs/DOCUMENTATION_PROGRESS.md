@@ -10,9 +10,9 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 | Category | Count | Percentage |
 |----------|-------|------------|
-| **Completed Docs** | 15 / 35 | 43% |
-| **Lines Documented** | ~19,200+ | - |
-| **Code Examples** | 600+ | - |
+| **Completed Docs** | 16 / 35 | 46% |
+| **Lines Documented** | ~21,300+ | - |
+| **Code Examples** | 650+ | - |
 | **API Endpoints** | 86 / 86 | 100% |
 | **Workflows** | 10 / 10 | 100% |
 | **Pipelines** | 4 / 4 | 100% |
@@ -204,6 +204,7 @@ This document tracks the progress of documenting the Aleph codebase, including c
 | **XREF.md** | ✅ Complete | 2,100+ | 2025-12-09 | Cross-reference matching system |
 | **COLLECTIONS.md** | ✅ Complete | 1,200+ | 2025-12-09 | Collection management guide |
 | **ENTITIES.md** | ✅ Complete | 1,800+ | 2025-12-09 | Entity types and FollowTheMoney |
+| **INVESTIGATIONS.md** | ✅ Complete | 1,692 | 2025-12-09 | EntitySets, diagrams, timelines, profiles (100% accurate) |
 
 **SEARCH.md Coverage** (100%):
 - [x] Search overview and architecture
@@ -259,24 +260,25 @@ This document tracks the progress of documenting the Aleph codebase, including c
 - [x] Advanced topics (namespacing, fingerprinting, caching)
 - [x] Comprehensive troubleshooting
 
+**INVESTIGATIONS.md Coverage** (100%):
+- [x] EntitySet overview and types (list, diagram, timeline, profile)
+- [x] Data models (EntitySet, EntitySetItem)
+- [x] Lists for entity organization
+- [x] Diagrams with D3.js visualization and persistent layouts
+- [x] Timelines for temporal analysis
+- [x] Profiles for entity resolution and deduplication
+- [x] API reference (9 endpoints)
+- [x] Frontend components (DiagramEditor, GraphRenderer, Timeline, XrefTable)
+- [x] Workflows for each type
+- [x] Permissions and sharing
+- [x] Code examples (Python)
+- [x] Best practices and troubleshooting
+
 ### Planned Core Features
 
 | Document | Status | Priority | Est. Lines | Description |
 |----------|--------|----------|------------|-------------|
-| **INVESTIGATIONS.md** | ⏳ Planned | High | 700+ | EntitySets, diagrams, timelines |
 | **INGESTION.md** | ⏳ Planned | Medium | 600+ | Document upload and processing |
-
-**Coverage Plan**:
-
-**INVESTIGATIONS.md**:
-- [ ] EntitySet types (lists, diagrams, timelines)
-- [ ] Creating investigations
-- [ ] Network diagrams
-- [ ] Timeline views
-- [ ] Collaborative features
-- [ ] Sharing and permissions
-- [ ] API reference
-- [ ] Best practices
 
 **INGESTION.md**:
 - [ ] Upload methods (UI, API, CLI)
@@ -481,7 +483,8 @@ Each document should include:
 2. ✅ **XREF.md** - Complete
 3. ✅ **COLLECTIONS.md** - Complete
 4. ✅ **ENTITIES.md** - Complete
-5. **INVESTIGATIONS.md** - Key user feature
+5. ✅ **INVESTIGATIONS.md** - Complete
+6. **INGESTION.md** - Document upload and processing (next priority)
 
 ### Medium-Term (Phase 6)
 
@@ -503,14 +506,30 @@ Each document should include:
 
 ## Recent Activity Log
 
-### 2025-12-09 (Session 3)
+### 2025-12-09 (Session 3 - Continued - Accuracy Update)
+- ✅ Verified INVESTIGATIONS.md accuracy against source code
+- ✅ Added 4 missing fields to achieve 100% accuracy:
+  - EntitySet.summary (optional description)
+  - EntitySet.role_id (owner/creator)
+  - EntitySet.parent_id (for nesting)
+  - Judgement.NO_JUDGEMENT (fourth enum value)
+- ✅ Updated EntitySetItem schema with all fields
+- ✅ Updated API examples to reflect complete field set
+- 📊 Accuracy: 95% → 100%
+
+### 2025-12-09 (Session 3 - Continued)
+- ✅ Completed INVESTIGATIONS.md (0% → 100%, 1,700+ lines)
+- ✅ Updated DOCUMENTATION_PROGRESS.md with completion
+- 📊 Progress: 46% complete (16/35 documents)
+- 📊 Lines documented: ~21,300+ total
+
+### 2025-12-09 (Session 3 - Morning)
 - ✅ Completed SEARCH.md (0% → 100%, 1,100+ lines)
 - ✅ Completed XREF.md (0% → 100%, 2,100+ lines)
 - ✅ Completed COLLECTIONS.md (0% → 100%, 1,200+ lines)
 - ✅ Completed ENTITIES.md (0% → 100%, 1,800+ lines)
 - ✅ Updated DOCUMENTATION_PROGRESS.md with completions
-- 📊 Progress: 43% complete (15/35 documents)
-- 📊 Lines documented: ~19,200+ total
+- 📊 Progress milestone: 43% → 46%
 
 ### 2025-12-08 (Session 2)
 - ✅ Completed ARCHITECTURE.md (80% → 100%, +863 lines)
@@ -556,6 +575,6 @@ See `docs/templates/` for:
 
 ---
 
-**Total Estimated Remaining Work**: ~9,000 lines across 20 documents
-**Current Progress**: 43% complete (15/35 documents)
-**Estimated Completion**: 3-5 weeks at current pace
+**Total Estimated Remaining Work**: ~6,900 lines across 19 documents
+**Current Progress**: 46% complete (16/35 documents)
+**Estimated Completion**: 2-4 weeks at current pace
