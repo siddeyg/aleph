@@ -10,9 +10,9 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 | Category | Count | Percentage |
 |----------|-------|------------|
-| **Completed Docs** | 11 / 35 | 31% |
-| **Lines Documented** | ~13,000+ | - |
-| **Code Examples** | 400+ | - |
+| **Completed Docs** | 12 / 35 | 34% |
+| **Lines Documented** | ~14,100+ | - |
+| **Code Examples** | 450+ | - |
 | **API Endpoints** | 86 / 86 | 100% |
 | **Workflows** | 10 / 10 | 100% |
 | **Pipelines** | 4 / 4 | 100% |
@@ -198,21 +198,23 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 ### Current: Search Documentation
 
-| Document | Status | Lines | Date Started | Description |
-|----------|--------|-------|--------------|-------------|
-| **SEARCH.md** | 🚧 In Progress | TBD | 2025-12-08 | Search capabilities and query syntax |
+| Document | Status | Lines | Date Completed | Description |
+|----------|--------|-------|----------------|-------------|
+| **SEARCH.md** | ✅ Complete | 1,100+ | 2025-12-08 | Search capabilities and query syntax |
 
-**Planned Coverage**:
-- [ ] Search overview
-- [ ] Query syntax and operators
-- [ ] Faceted search
-- [ ] Filters and aggregations
-- [ ] Advanced search features
-- [ ] Search API reference
-- [ ] Query performance
-- [ ] Search best practices
-- [ ] Elasticsearch internals
-- [ ] Troubleshooting search issues
+**Coverage** (100%):
+- [x] Search overview and architecture
+- [x] Quick start guide
+- [x] Complete Search API reference
+- [x] Query syntax (boolean, wildcards, phrases)
+- [x] Filtering (schema, country, properties)
+- [x] Faceted search with drill-down
+- [x] Sorting and pagination
+- [x] Advanced features (xref, alerts, expansion)
+- [x] Frontend search components
+- [x] Authorization and permissions
+- [x] Performance optimization
+- [x] Comprehensive troubleshooting
 
 ### Planned Core Features
 
