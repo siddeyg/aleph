@@ -10,9 +10,9 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 | Category | Count | Percentage |
 |----------|-------|------------|
-| **Completed Docs** | 17 / 35 | 49% |
-| **Lines Documented** | ~23,150+ | - |
-| **Code Examples** | 680+ | - |
+| **Completed Docs** | 18 / 35 | 51% |
+| **Lines Documented** | ~25,000+ | - |
+| **Code Examples** | 710+ | - |
 | **API Endpoints** | 86 / 86 | 100% |
 | **Workflows** | 10 / 10 | 100% |
 | **Pipelines** | 4 / 4 | 100% |
@@ -293,29 +293,36 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 ---
 
-## Phase 6: Technical Deep Dives (Planned) 📋
+## Phase 6: Technical Deep Dives (In Progress) 🚧
 
-### Infrastructure & Operations
+### Completed Deep Dives
+
+| Document | Status | Lines | Date Completed | Description |
+|----------|--------|-------|----------------|-------------|
+| **WORKERS.md** | ✅ Complete | 1,867 | 2025-12-09 | Background task processing system |
+
+**WORKERS.md Coverage** (100%):
+- [x] Worker architecture (AlephWorker class, thread pool, task dispatcher)
+- [x] Task queue system (RabbitMQ, priority, QoS)
+- [x] 10 processing stages (index, xref, reingest, reindex, mappings, exports, entity ops)
+- [x] Task processing (lifecycle, priority, concurrency, error handling)
+- [x] Indexing pipeline (batch accumulation, flush triggers, bulk operations)
+- [x] Monitoring (status tracking, collection statistics, logging)
+- [x] Configuration (environment variables, performance tuning)
+- [x] Scaling (horizontal, vertical, stage-specific workers)
+- [x] Troubleshooting (6 common issues with solutions)
+- [x] CLI commands and deployment examples
+
+### Planned Deep Dives
 
 | Document | Status | Priority | Est. Lines | Description |
 |----------|--------|----------|------------|-------------|
-| **WORKERS.md** | ⏳ Planned | High | 800+ | Background task processing |
 | **ELASTICSEARCH.md** | ⏳ Planned | High | 900+ | Search index architecture |
 | **TESTING.md** | ⏳ Planned | Medium | 600+ | Testing strategy and guidelines |
 | **PERFORMANCE.md** | ⏳ Planned | Medium | 700+ | Performance tuning |
 | **TROUBLESHOOTING.md** | ⏳ Planned | High | 800+ | Common issues and solutions |
 
 **Coverage Plan**:
-
-**WORKERS.md**:
-- [ ] Worker architecture
-- [ ] Task queue (RabbitMQ/Redis)
-- [ ] Worker stages and routing
-- [ ] Job processing lifecycle
-- [ ] Error handling and retries
-- [ ] Monitoring workers
-- [ ] Scaling workers
-- [ ] Performance tuning
 
 **ELASTICSEARCH.md**:
 - [ ] Index architecture
@@ -422,7 +429,7 @@ This document tracks the progress of documenting the Aleph codebase, including c
 | **aleph/logic/** | 23 | 15 | 65% 🔶 |
 | **aleph/search/** | 6 | 2 | 33% 🔶 |
 | **aleph/index/** | 7 | 4 | 57% 🔶 |
-| **aleph/worker.py** | 1 | 0 | 0% ⏳ |
+| **aleph/worker.py** | 1 | 1 | 100% ✅ |
 | **aleph/authz.py** | 1 | 1 | 100% ✅ |
 | **aleph/oauth.py** | 1 | 0 | 0% ⏳ |
 | **aleph/tests/** | 30+ | 1 | 5% ⏳ |
@@ -506,6 +513,23 @@ Each document should include:
 ---
 
 ## Recent Activity Log
+
+### 2025-12-09 (Session 4 - WORKERS.md)
+- ✅ Analyzed worker system comprehensively (worker.py, stages, queues, task processing)
+- ✅ Completed WORKERS.md (0% → 100%, 1,867 lines)
+  - Complete worker architecture (AlephWorker class, thread pool, dispatcher)
+  - Task queue system (RabbitMQ, priority, QoS)
+  - 10 processing stages with detailed handlers
+  - Indexing pipeline with intelligent batch accumulation
+  - Monitoring and status tracking
+  - Configuration and performance tuning
+  - Horizontal and vertical scaling strategies
+  - 6 troubleshooting scenarios with solutions
+  - Thread-safe batch operations with locking
+- ✅ Updated tracking files (INDEX.md, DOCUMENTATION_PROGRESS.md)
+- 📊 Progress: 49% → 51% complete (18/35 documents)
+- 📊 Lines documented: ~23,150+ → ~25,000+ total
+- 🎉 **Phase 6 (Technical Deep Dives) started!** (1/5 docs completed)
 
 ### 2025-12-09 (Session 3 - Continued - INGESTION.md)
 - ✅ Analyzed ingestion system comprehensively (models, logic, views, workers)
