@@ -10,9 +10,9 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 | Category | Count | Percentage |
 |----------|-------|------------|
-| **Completed Docs** | 13 / 35 | 37% |
-| **Lines Documented** | ~16,200+ | - |
-| **Code Examples** | 500+ | - |
+| **Completed Docs** | 14 / 35 | 40% |
+| **Lines Documented** | ~17,400+ | - |
+| **Code Examples** | 550+ | - |
 | **API Endpoints** | 86 / 86 | 100% |
 | **Workflows** | 10 / 10 | 100% |
 | **Pipelines** | 4 / 4 | 100% |
@@ -202,6 +202,7 @@ This document tracks the progress of documenting the Aleph codebase, including c
 |----------|--------|-------|----------------|-------------|
 | **SEARCH.md** | ✅ Complete | 1,100+ | 2025-12-08 | Search capabilities and query syntax |
 | **XREF.md** | ✅ Complete | 2,100+ | 2025-12-09 | Cross-reference matching system |
+| **COLLECTIONS.md** | ✅ Complete | 1,200+ | 2025-12-09 | Collection management guide |
 
 **SEARCH.md Coverage** (100%):
 - [x] Search overview and architecture
@@ -231,26 +232,27 @@ This document tracks the progress of documenting the Aleph codebase, including c
 - [x] Performance optimization
 - [x] Comprehensive troubleshooting
 
+**COLLECTIONS.md Coverage** (100%):
+- [x] Collection overview and types
+- [x] Collection categories (19 types)
+- [x] Creating collections (UI and API)
+- [x] Managing collections (update, delete, touch)
+- [x] Permission system (RBAC, public/private)
+- [x] Collection operations (reindex, reingest, bulk load)
+- [x] API reference (12 endpoints)
+- [x] Frontend integration
+- [x] Advanced topics (namespaces, aggregator, statistics)
+- [x] Comprehensive troubleshooting
+
 ### Planned Core Features
 
 | Document | Status | Priority | Est. Lines | Description |
 |----------|--------|----------|------------|-------------|
-| **COLLECTIONS.md** | ⏳ Planned | High | 600+ | Collection management guide |
 | **ENTITIES.md** | ⏳ Planned | High | 800+ | Entity types and FollowTheMoney |
 | **INVESTIGATIONS.md** | ⏳ Planned | High | 700+ | EntitySets, diagrams, timelines |
 | **INGESTION.md** | ⏳ Planned | Medium | 600+ | Document upload and processing |
 
 **Coverage Plan**:
-
-**COLLECTIONS.md**:
-- [ ] Collection types and categories
-- [ ] Creating collections
-- [ ] Permission management
-- [ ] Collection settings
-- [ ] Metadata and labels
-- [ ] Collection operations
-- [ ] API reference
-- [ ] Best practices
 
 **ENTITIES.md**:
 - [ ] FollowTheMoney schema overview
@@ -473,7 +475,7 @@ Each document should include:
 
 1. ✅ **SEARCH.md** - Complete
 2. ✅ **XREF.md** - Complete
-3. **COLLECTIONS.md** - Core feature documentation
+3. ✅ **COLLECTIONS.md** - Complete
 4. **ENTITIES.md** - Critical for understanding data model
 5. **INVESTIGATIONS.md** - Key user feature
 
@@ -500,9 +502,10 @@ Each document should include:
 ### 2025-12-09 (Session 3)
 - ✅ Completed SEARCH.md (0% → 100%, 1,100+ lines)
 - ✅ Completed XREF.md (0% → 100%, 2,100+ lines)
+- ✅ Completed COLLECTIONS.md (0% → 100%, 1,200+ lines)
 - ✅ Updated DOCUMENTATION_PROGRESS.md with completions
-- 📊 Progress: 37% complete (13/35 documents)
-- 📊 Lines documented: ~16,200+ total
+- 📊 Progress: 40% complete (14/35 documents)
+- 📊 Lines documented: ~17,400+ total
 
 ### 2025-12-08 (Session 2)
 - ✅ Completed ARCHITECTURE.md (80% → 100%, +863 lines)
@@ -548,6 +551,6 @@ See `docs/templates/` for:
 
 ---
 
-**Total Estimated Remaining Work**: ~12,000 lines across 22 documents
-**Current Progress**: 37% complete (13/35 documents)
-**Estimated Completion**: 5-7 weeks at current pace
+**Total Estimated Remaining Work**: ~10,800 lines across 21 documents
+**Current Progress**: 40% complete (14/35 documents)
+**Estimated Completion**: 4-6 weeks at current pace
