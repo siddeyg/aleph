@@ -264,6 +264,7 @@ Read [claude.md](../claude.md) to understand what Aleph is and its core capabili
 | SEARCH.md | ✅ Complete | 2025-12-08 | 100% (1100+ lines) |
 | XREF.md | ✅ Complete | 2025-12-09 | 100% (2100+ lines) |
 | COLLECTIONS.md | ✅ Complete | 2025-12-09 | 100% (1200+ lines) |
+| ENTITIES.md | ✅ Complete | 2025-12-09 | 100% (1800+ lines) |
 | DOCUMENTATION_PROGRESS.md | ✅ Complete | 2025-12-09 | 100% (tracking doc) |
 | Other docs | ⏳ Planned | - | 0% |
 

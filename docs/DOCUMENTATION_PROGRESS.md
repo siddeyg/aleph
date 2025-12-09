@@ -10,9 +10,9 @@ This document tracks the progress of documenting the Aleph codebase, including c
 
 | Category | Count | Percentage |
 |----------|-------|------------|
-| **Completed Docs** | 14 / 35 | 40% |
-| **Lines Documented** | ~17,400+ | - |
-| **Code Examples** | 550+ | - |
+| **Completed Docs** | 15 / 35 | 43% |
+| **Lines Documented** | ~19,200+ | - |
+| **Code Examples** | 600+ | - |
 | **API Endpoints** | 86 / 86 | 100% |
 | **Workflows** | 10 / 10 | 100% |
 | **Pipelines** | 4 / 4 | 100% |
@@ -203,6 +203,7 @@ This document tracks the progress of documenting the Aleph codebase, including c
 | **SEARCH.md** | ✅ Complete | 1,100+ | 2025-12-08 | Search capabilities and query syntax |
 | **XREF.md** | ✅ Complete | 2,100+ | 2025-12-09 | Cross-reference matching system |
 | **COLLECTIONS.md** | ✅ Complete | 1,200+ | 2025-12-09 | Collection management guide |
+| **ENTITIES.md** | ✅ Complete | 1,800+ | 2025-12-09 | Entity types and FollowTheMoney |
 
 **SEARCH.md Coverage** (100%):
 - [x] Search overview and architecture
@@ -244,25 +245,28 @@ This document tracks the progress of documenting the Aleph codebase, including c
 - [x] Advanced topics (namespaces, aggregator, statistics)
 - [x] Comprehensive troubleshooting
 
+**ENTITIES.md Coverage** (100%):
+- [x] Entity overview and FollowTheMoney schema
+- [x] Common entity types (Person, Company, Document, etc.)
+- [x] Property types and validation
+- [x] Creating entities (API, bulk, mapping, ingestion)
+- [x] Managing entities (CRUD, validation)
+- [x] Entity search and filtering
+- [x] Entity relationships and expansion
+- [x] Entity profiles and merging
+- [x] API reference (10+ endpoints)
+- [x] Frontend integration
+- [x] Advanced topics (namespacing, fingerprinting, caching)
+- [x] Comprehensive troubleshooting
+
 ### Planned Core Features
 
 | Document | Status | Priority | Est. Lines | Description |
 |----------|--------|----------|------------|-------------|
-| **ENTITIES.md** | ⏳ Planned | High | 800+ | Entity types and FollowTheMoney |
 | **INVESTIGATIONS.md** | ⏳ Planned | High | 700+ | EntitySets, diagrams, timelines |
 | **INGESTION.md** | ⏳ Planned | Medium | 600+ | Document upload and processing |
 
 **Coverage Plan**:
-
-**ENTITIES.md**:
-- [ ] FollowTheMoney schema overview
-- [ ] Entity types (50+ schemas)
-- [ ] Properties and relationships
-- [ ] Creating entities
-- [ ] Editing entities
-- [ ] Entity validation
-- [ ] API reference
-- [ ] Schema diagrams
 
 **INVESTIGATIONS.md**:
 - [ ] EntitySet types (lists, diagrams, timelines)
@@ -476,7 +480,7 @@ Each document should include:
 1. ✅ **SEARCH.md** - Complete
 2. ✅ **XREF.md** - Complete
 3. ✅ **COLLECTIONS.md** - Complete
-4. **ENTITIES.md** - Critical for understanding data model
+4. ✅ **ENTITIES.md** - Complete
 5. **INVESTIGATIONS.md** - Key user feature
 
 ### Medium-Term (Phase 6)
@@ -503,9 +507,10 @@ Each document should include:
 - ✅ Completed SEARCH.md (0% → 100%, 1,100+ lines)
 - ✅ Completed XREF.md (0% → 100%, 2,100+ lines)
 - ✅ Completed COLLECTIONS.md (0% → 100%, 1,200+ lines)
+- ✅ Completed ENTITIES.md (0% → 100%, 1,800+ lines)
 - ✅ Updated DOCUMENTATION_PROGRESS.md with completions
-- 📊 Progress: 40% complete (14/35 documents)
-- 📊 Lines documented: ~17,400+ total
+- 📊 Progress: 43% complete (15/35 documents)
+- 📊 Lines documented: ~19,200+ total
 
 ### 2025-12-08 (Session 2)
 - ✅ Completed ARCHITECTURE.md (80% → 100%, +863 lines)
@@ -551,6 +556,6 @@ See `docs/templates/` for:
 
 ---
 
-**Total Estimated Remaining Work**: ~10,800 lines across 21 documents
-**Current Progress**: 40% complete (14/35 documents)
-**Estimated Completion**: 4-6 weeks at current pace
+**Total Estimated Remaining Work**: ~9,000 lines across 20 documents
+**Current Progress**: 43% complete (15/35 documents)
+**Estimated Completion**: 3-5 weeks at current pace
